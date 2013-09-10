@@ -152,6 +152,7 @@ class GPXIngest{
 
 				// Initialise the sub-stats variable
 				$speed = 0;
+				$sspeed = array();
 				$x = 0;
 
 				// Set the segment key
@@ -177,6 +178,7 @@ class GPXIngest{
 					$ptspeed = (int)filter_var($trkpt->desc, FILTER_SANITIZE_NUMBER_INT);
 					$speed = $speed + $ptspeed;
 					$fspeed[] = $ptspeed;
+					$sspeed[] = $ptspeed;
 
 					// Update the times arrays
 					$times[] = $time;
@@ -187,16 +189,21 @@ class GPXIngest{
 				}
 
 				
-
+  
 				// Add the segment stats to the journey object
 				$start = min($times);
 				$end = max($times);
 				$duration = $end - $start;
+				$modesearch = array_count_values($sspeed); 
 
 				$this->journey->journeys->$jkey->segments->$segkey->stats->avgspeed = round($speed/$x,2);
 				$this->journey->journeys->$jkey->segments->$segkey->stats->start = $start;
 				$this->journey->journeys->$jkey->segments->$segkey->stats->end = $end;
 				$this->journey->journeys->$jkey->segments->$segkey->stats->journeyDuration = $duration;
+				$this->journey->journeys->$jkey->segments->$segkey->stats->modalSpeed = array_search(max($modesearch), $modesearch);
+				$this->journey->journeys->$jkey->segments->$segkey->stats->minSpeed = min($sspeed);
+				$this->journey->journeys->$jkey->segments->$segkey->stats->maxSpeed = max($sspeed);
+
 
 				// Increase the track duration by the time of our segment
 				$this->journey->journeys->$jkey->stats->journeyDuration = $this->journey->journeys->$jkey->stats->journeyDuration + $duration;
