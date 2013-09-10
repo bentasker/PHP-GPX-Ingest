@@ -166,6 +166,7 @@ class GPXIngest{
 
 					// Initialise some variables
 					$key = "trackpt$x";
+					$ptspeed = (int)filter_var($trkpt->desc, FILTER_SANITIZE_NUMBER_INT);
 
 					$time = strtotime($trkpt->time);
 					$this->journey->journeys->$jkey->segments->$segkey->points->$key->lat = (string) $trkpt['lat'];
@@ -173,9 +174,9 @@ class GPXIngest{
 					$this->journey->journeys->$jkey->segments->$segkey->points->$key->time = $time;
 					$this->journey->journeys->$jkey->segments->$segkey->points->$key->speed = (string) $trkpt->desc;
 					$this->journey->journeys->$jkey->segments->$segkey->points->$key->elevation = (string) $trkpt->ele;
+					$this->journey->journeys->$jkey->segments->$segkey->points->$key->speedint = $ptspeed;
 
 					// Calculate speed stats
-					$ptspeed = (int)filter_var($trkpt->desc, FILTER_SANITIZE_NUMBER_INT);
 					$speed = $speed + $ptspeed;
 					$fspeed[] = $ptspeed;
 					$sspeed[] = $ptspeed;
