@@ -13,22 +13,22 @@
 
 class GPXIngest{
 
-	var $file;
-	var $xml;
-	var $journey;
-	var $tracks = array();
-	var $highspeeds;
-	var $lowspeeds;
-	var $journeyspeeds;
-	var $totaltimes;
-	var $ftimes;
-	var $trackduration;
-	var $smarttrack=true;
-	var $smarttrackthreshold = 3600;
-	var $suppresslocation = false;
-	var $suppressspeed = false;
-	var $suppresselevation = false;
-	var $suppressdate = false;
+	private $file;
+	private $xml;
+	private $journey;
+	private $tracks = array();
+	private $highspeeds;
+	private $lowspeeds;
+	private $journeyspeeds;
+	private $totaltimes;
+	private $ftimes;
+	private $trackduration;
+	private $smarttrack=true;
+	private $smarttrackthreshold = 3600;
+	private $suppresslocation = false;
+	private $suppressspeed = false;
+	private $suppresselevation = false;
+	private $suppressdate = false;
 
 
 
@@ -44,7 +44,7 @@ class GPXIngest{
 	/** Reset all relevant class variables - saves unloading the class if processing multiple files
 	*
 	*/
-	function reset(){
+	public function reset(){
 		$this->journey = new stdClass();
 		$this->tracks = array();
 	}
@@ -55,7 +55,7 @@ class GPXIngest{
 	* @arg $file - string to XML file, can be relative or full path
 	*
 	*/
-	function loadFile($file){
+	public function loadFile($file){
 		$this->xml = simplexml_load_file($file);
 		if ($this->xml){
 			return true;
@@ -71,7 +71,7 @@ class GPXIngest{
 	* @arg $str - XML String
 	*
 	*/
-	function loadString($str){
+	public function loadString($str){
 		$this->xml = simplexml_load_string($str);
 		if ($this->xml){
 			return true;
@@ -90,7 +90,7 @@ class GPXIngest{
 	* @arg $json - JSON encapsulated string
 	*
 	*/
-	function loadJSON($json){
+	public function loadJSON($json){
 		$this->journey = json_decode($json);
 
 		if (!is_object($this->journey)){
@@ -114,8 +114,8 @@ class GPXIngest{
 	/** Load a JSON string from a file
 	*
 	*/
-	function loadJSONFile($file){
-		$this->loadJSON(file_get_contents($file));
+	public function loadJSONFile($file){
+		return $this->loadJSON(file_get_contents($file));
 	}
 
 
@@ -123,7 +123,7 @@ class GPXIngest{
 	/** Toggle SmartTrack on/off
 	*
 	*/
-	function toggleSmartTrack(){
+	public function toggleSmartTrack(){
 		$this->smarttrack = ($this->smarttrack)? false : true;
 		return $this->smarttrack;
 	}
@@ -133,7 +133,7 @@ class GPXIngest{
 	/** Get the current Smart Track Status
 	*
 	*/
-	function smartTrackStatus(){
+	public function smartTrackStatus(){
 		return $this->smarttrack;
 	}
 
@@ -141,7 +141,7 @@ class GPXIngest{
 	/** Get the smartTrackThreshold
 	*
 	*/
-	function smartTrackThreshold(){
+	public function smartTrackThreshold(){
 		return $this->smarttrackthreshold;
 	}
 
@@ -150,7 +150,7 @@ class GPXIngest{
 	/** Set the smart Track trigger threshold
 	*
 	*/
-	function setSmartTrackThreshold($thresh){
+	public function setSmartTrackThreshold($thresh){
 		$this->smarttrackthreshold = $thresh;
 	}
 
@@ -163,7 +163,7 @@ class GPXIngest{
 	* Also updates our reference arrays
 	*
 	*/
-	function ingest(){
+	public function ingest(){
 
 		if (!is_object($this->xml)){
 			return false;
@@ -356,7 +356,7 @@ class GPXIngest{
 	/** Update the Journey object's metadata to include details of what information (if any) was suppressed at ingest
 	*
 	*/
-	function writeSuppressionMetadata(){
+	private function writeSuppressionMetadata(){
 
 		if ($this->suppresslocation){
 			$this->journey->metadata->suppression[] = 'location';
@@ -377,7 +377,7 @@ class GPXIngest{
 	/** Generate a track identifier
 	*
 	*/
-	function genTrackKey($i){
+	private function genTrackKey($i){
 		return "journey$i";
 	}
 
@@ -386,7 +386,7 @@ class GPXIngest{
 	/** Generate a segment identifier
 	*
 	*/
-	function genSegKey($i){
+	private function genSegKey($i){
 		return "seg$i";
 	}
 
@@ -396,7 +396,7 @@ class GPXIngest{
 	/** Initialise a Segment object
 	*
 	*/
-	function initSegment($jkey,$segkey){
+	private function initSegment($jkey,$segkey){
 		$this->journey->journeys->$jkey->segments->$segkey = new stdClass();
 	}
 
@@ -405,7 +405,7 @@ class GPXIngest{
 	/** Initialise a track object
 	*
 	*/
-	function initTrack($jkey,$trk){
+	private function initTrack($jkey,$trk){
 
 		$this->journey->journeys->$jkey = new stdClass();
 		$this->journey->journeys->$jkey->segments = new stdClass();
@@ -420,7 +420,7 @@ class GPXIngest{
 	/** Write stats for the current segment
 	*
 	*/
-	function writeSegmentStats($jkey,$segkey,$times,$x){
+	private function writeSegmentStats($jkey,$segkey,$times,$x){
 
 
 		if (!$this->suppressspeed){
@@ -462,7 +462,7 @@ class GPXIngest{
 	/** Write stats for the current track
 	*
 	*/
-	function writeTrackStats($jkey){
+	private function writeTrackStats($jkey){
 
 		// If speed is suppressed we'll have pushed 1 into the array for each trackpart.
 		$ptcount = count($this->fspeed);
@@ -504,7 +504,7 @@ class GPXIngest{
 	/** Reset the track stats counter
 	*
 	*/
-	function resetTrackStats(){
+	private function resetTrackStats(){
 		$this->ftimes = array();
 		$this->fspeed = array();
 		$this->trackduration = 0;
@@ -514,7 +514,7 @@ class GPXIngest{
 	/** Reset the segments stats counter
 	*
 	*/
-	function resetSegmentStats(){
+	private function resetSegmentStats(){
 		$this->speed = 0;
 		$this->sspeed = array();
 	}
@@ -534,7 +534,7 @@ class GPXIngest{
 	* @return stdClass
 	*
 	*/
-	function getMetadata(){
+	public function getMetadata(){
 		return $this->journey->metadata;
 	}
 
@@ -545,7 +545,7 @@ class GPXIngest{
 	* @return array
 	*
 	*/
-	function getTrackIDs(){
+	public function getTrackIDs(){
 		return array_keys($this->tracks);
 	}
 
@@ -555,7 +555,7 @@ class GPXIngest{
 	* @return array
 	*
 	*/
-	function getTrackNames(){
+	public function getTrackNames(){
 		$tracks = array();
 
 		foreach ($this->tracks as $k => $v){
@@ -573,7 +573,7 @@ class GPXIngest{
 	* @return array
 	*
 	*/
-	function getTrackSegmentNames($track){
+	public function getTrackSegmentNames($track){
 		return array_keys($this->tracks[$track]['segments']);
 	}
 
@@ -585,7 +585,7 @@ class GPXIngest{
 	* @arg segment - the segment ID
 	*
 	*/
-	function getTrackPointNames($track,$segment){
+	public function getTrackPointNames($track,$segment){
 		return array_keys((array) $this->journey->journeys->$track->segments->$segment->points);
 	}
 
@@ -598,7 +598,7 @@ class GPXIngest{
 	* @return INT - UNIX Epoch
 	*
 	*/
-	function getGPXTime(){
+	public function getGPXTime(){
 		return $this->journey->created->time;
 	}
 
@@ -609,7 +609,7 @@ class GPXIngest{
 	* @return string
 	*
 	*/
-	function getGPXTimeZone(){
+	public function getGPXTimeZone(){
 		return $this->journey->timezone;
 	}
 
@@ -629,7 +629,7 @@ class GPXIngest{
 	* @return INT
 	*
 	*/
-	function getTrackPointCount($track,$segment){
+	public function getTrackPointCount($track,$segment){
 		return $this->tracks[$track]['segments'][$segment];
 	}
 
@@ -638,7 +638,7 @@ class GPXIngest{
 	*
 	* @return object
 	*/
-	function getJourneyStats(){
+	public function getJourneyStats(){
 		return $this->journey->stats;
 	}
 
@@ -649,7 +649,7 @@ class GPXIngest{
 	* @return decimal
 	*
 	*/
-	function getTotalAvgSpeed(){
+	public function getTotalAvgSpeed(){
 		return $this->journey->stats->avgspeed;
 	}
 
@@ -662,7 +662,7 @@ class GPXIngest{
 	* @arg segment - the segment ID
 	*
 	*/
-	function getStats($track,$segment=false){
+	public function getStats($track,$segment=false){
 		if (!$segment){
 			return $this->journey->journeys->$track->stats;
 		}
@@ -678,7 +678,7 @@ class GPXIngest{
 	* @return INT - UNIX epoch
 	*
 	*/
-	function getJourneyStart(){
+	public function getJourneyStart(){
 		return $this->journey->stats->start;
 	}
 
@@ -690,7 +690,7 @@ class GPXIngest{
 	* @return INT - UNIX epoch
 	*
 	*/
-	function getJourneyEnd(){
+	public function getJourneyEnd(){
 		return $this->journey->stats->end;
 	}
 
@@ -703,7 +703,7 @@ class GPXIngest{
 	* @arg segment - the segment ID
 	*
 	*/
-	function getAvgSpeed($track,$segment=false){
+	public function getAvgSpeed($track,$segment=false){
 
 		if (!$segment){
 			return $this->journey->journeys->$track->stats->avgspeed;
@@ -729,7 +729,7 @@ class GPXIngest{
 	*
 	* @return object
 	*/
-	function getTrack($track){
+	public function getTrack($track){
 		return $this->journey->journeys->$track;
 	}
 
@@ -743,7 +743,7 @@ class GPXIngest{
 	*
 	* @return object
 	*/
-	function getSegment($track,$segment){
+	public function getSegment($track,$segment){
 		return $this->journey->journeys->$track->segments->$segment;
 	}
 
@@ -758,7 +758,7 @@ class GPXIngest{
 	* @arg trackpoint - the trackpoint ID
 	*
 	*/
-	function getTrackPoint($track,$segment,$point){
+	public function getTrackPoint($track,$segment,$point){
 		return $this->journey->journeys->$track->segments->$segment->points->$point;
 	}
 
@@ -769,7 +769,7 @@ class GPXIngest{
 	* @return string
 	*
 	*/
-	function getJSON(){
+	public function getJSON(){
 		return json_encode($this->journey);
 	}
 
@@ -781,7 +781,7 @@ class GPXIngest{
 	* @return object
 	*
 	*/
-	function getObject(){
+	public function getObject(){
 		return $this->journey;
 	}
 
@@ -792,7 +792,7 @@ class GPXIngest{
 	/** Suppress elements of the data
 	*
 	*/
-	function suppress($ele){
+	public function suppress($ele){
 
 		switch($ele){
 			case 'location':
@@ -819,7 +819,7 @@ class GPXIngest{
 	/** Unsuppress elements of the data
 	*
 	*/
-	function unsuppress($ele){
+	public function unsuppress($ele){
 
 		switch($ele){
 			case 'location':
