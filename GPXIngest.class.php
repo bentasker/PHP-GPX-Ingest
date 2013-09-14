@@ -44,6 +44,11 @@ class GPXIngest{
 	*/
 	function loadFile($file){
 		$this->xml = simplexml_load_file($file);
+		if ($this->xml){
+			return true;
+		}else{
+			return false;
+		}
 	}
 
 
@@ -54,6 +59,11 @@ class GPXIngest{
 	*/
 	function loadString($str){
 		$this->xml = simplexml_load_string($str);
+		if ($this->xml){
+			return true;
+		}else{
+			return false;
+		}
 	}
 
 
