@@ -522,17 +522,6 @@ class GPXIngest{
 
 
 
-	/** Get the Journey object's metadata
-	*
-	* @return stdClass
-	*
-	*/
-	function getMetadata(){
-		return $this->journey->metadata;
-	}
-
-
-
 	/** Get the ID's of any tracks that have been ingested
 	*
 	* @return array
