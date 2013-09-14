@@ -195,11 +195,6 @@ class GPXIngest{
 		foreach ($this->xml->trk as $trk){
 
 			// Initialise the stats variables
-			/*
-			$this->ftimes = array();
-			$this->fspeed = array();
-			$this->trackduration = 0;
-			*/
 			$this->resetTrackStats();
 			$b = 0;
 
@@ -207,18 +202,6 @@ class GPXIngest{
 			//$jkey = "journey$a";
 			$jkey = $this->genTrackKey($a);
 			$this->initTrack($jkey,$trk->name);
-
-			/*
-			// Initialise the object
-			$this->journey->journeys->$jkey = new stdClass();
-			$this->journey->journeys->$jkey->segments = new stdClass();
-			$this->journey->journeys->$jkey->name = (string) $trk->name;
-			$this->journey->journeys->$jkey->stats->journeyDuration = 0;
-
-			// Update our index array
-			$this->tracks[$jkey]['name'] = $this->journey->journeys->$jkey->name;
-			$this->tracks[$jkey]['segments'] = array();
-			*/
 
 
 			// There may be multiple segments if GPS connectivity was lost - process each seperately
@@ -235,12 +218,10 @@ class GPXIngest{
 				$times = array();
 
 				// Set the segment key
-				//$segkey = "seg$b";
 				$segkey = $this->genSegKey($b);
 
 
 				// Initialise the segment object
-				//$this->journey->journeys->$jkey->segments->$segkey = new stdClass();
 				$this->initSegment($jkey,$segkey);
 				
 
@@ -325,73 +306,12 @@ class GPXIngest{
 				}
 
 				$this->writeSegmentStats($jkey,$segkey,$times,$x);
-
-  				/** Will remove once we know the function works
-				// Add the segment stats to the journey object
-				$start = min($times);
-				$end = max($times);
-				$duration = $end - $start;
-				$modesearch = array_count_values($sspeed); 
-
-				$this->journey->journeys->$jkey->segments->$segkey->stats->avgspeed = round($speed/$x,2);
-				$this->journey->journeys->$jkey->segments->$segkey->stats->start = $start;
-				$this->journey->journeys->$jkey->segments->$segkey->stats->end = $end;
-				$this->journey->journeys->$jkey->segments->$segkey->stats->journeyDuration = $duration;
-				$this->journey->journeys->$jkey->segments->$segkey->stats->modalSpeed = array_search(max($modesearch), $modesearch);
-				$this->journey->journeys->$jkey->segments->$segkey->stats->minSpeed = min($sspeed);
-				$this->journey->journeys->$jkey->segments->$segkey->stats->maxSpeed = max($sspeed);
-
-
-				// Increase the track duration by the time of our segment
-				$this->journey->journeys->$jkey->stats->journeyDuration = $this->journey->journeys->$jkey->stats->journeyDuration + $duration;
-				$trackduration = $trackduration + $this->journey->journeys->$jkey->stats->journeyDuration;
-
-				// Update the index
-				$this->tracks[$jkey]['segments'][$segkey] = $x++;
-
-				// We only need to add the min/max times to the track as we've already sorted the segment
-				$ftimes[] = $this->journey->journeys->$jkey->segments->$segkey->stats->start;
-				$ftimes[] = $this->journey->journeys->$jkey->segments->$segkey->stats->end;
-				$this->journey->stats->segments++;
-				*/
-
 				$b++;
 				
 			}
 
 
 			$this->writeTrackStats($jkey);
-
-			/** Won't delete this till we know the function works correctly!
-			$sumspeed = array_sum($fspeed);
-			$ptcount = count($fspeed);
-			$modesearch = array_count_values($fspeed); 
-			$journeyspeeds = array_merge($journeyspeeds,$fspeed);
-
-
-			// Finalise the track stats
-			$this->journey->journeys->$jkey->stats->start = min($ftimes);
-			$this->journey->journeys->$jkey->stats->end = max($ftimes);
-			$this->journey->journeys->$jkey->stats->avgspeed = round($sumspeed/$ptcount,2);	
-			$this->journey->journeys->$jkey->stats->recordedDuration = $trackduration;
-			$this->journey->journeys->$jkey->stats->maxSpeed = max($fspeed);
-			$this->journey->journeys->$jkey->stats->minSpeed = min($fspeed);			
-			$this->journey->journeys->$jkey->stats->modalSpeed = array_search(max($modesearch), $modesearch);
-
-
-			// Add the calculated max/min speeds to the Journey wide stats
-			$highspeeds[] = $this->journey->journeys->$jkey->stats->maxSpeed;
-			$lowspeeds[] = $this->journey->journeys->$jkey->stats->minSpeed;
-
-
-			// Update the object totals
-			$this->journey->stats->trackpoints = $this->journey->stats->trackpoints + $ptcount;
-			$this->journey->stats->recordedDuration = $this->journey->stats->recordedDuration + $trackduration;
-			
-			$this->journey->stats->tracks++;
-			$totaltimes[] = $this->journey->journeys->$jkey->stats->start;
-			$totaltimes[] = $this->journey->journeys->$jkey->stats->end;
-			*/
 
 		}
 
