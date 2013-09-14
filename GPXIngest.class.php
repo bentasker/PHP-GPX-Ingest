@@ -60,6 +60,7 @@ class GPXIngest{
 		if ($this->xml){
 			return true;
 		}else{
+			$this->xml = false;
 			return false;
 		}
 	}
@@ -75,6 +76,7 @@ class GPXIngest{
 		if ($this->xml){
 			return true;
 		}else{
+			$this->xml = false;
 			return false;
 		}
 	}
@@ -90,6 +92,11 @@ class GPXIngest{
 	*/
 	function loadJSON($json){
 		$this->journey = json_decode($json);
+
+		if (!is_object($this->journey)){
+			$this->journey = false;
+			return false;
+		}
 
 		// We need to update our internal stats as well
 		foreach ($this->journey->journeys as $k => $v){
