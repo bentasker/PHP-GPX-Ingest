@@ -7,7 +7,7 @@
 * @copyright (C) 2013 B Tasker (http://www.bentasker.co.uk). All rights reserved
 * @license GNU GPL V2 - See LICENSE
 *
-* @version 1.1
+* @version 1.2
 *
 */
 

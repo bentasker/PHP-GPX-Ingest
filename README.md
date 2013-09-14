@@ -8,6 +8,23 @@ Documentation and example usage can be found in [the class documentation on my w
 
 
 
+Features
+----------
+
+The class has the following features
+
+ - Import basic GPX files
+ - Generate stats for each track, and maintain global stats
+ - 'SmartTrack' functionality - if an excessive delay is detected between trackpoints a new track will be started (can be disabled/threshold adjusted)
+ - Ability to suppress data - Can prevent speed, location, dates and/or elevation from being included in the resulting Journey object.
+
+
+
+
+
+
+
+
 
 Copyright
 ----------
