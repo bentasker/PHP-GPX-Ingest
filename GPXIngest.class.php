@@ -23,6 +23,8 @@ class GPXIngest{
 	var $totaltimes;
 	var $ftimes;
 	var $trackduration;
+	var $smarttrack=true;
+	var $smarttrackthreshold = 3600;
 
 
 
@@ -106,6 +108,44 @@ class GPXIngest{
 
 
 
+	/** Toggle SmartTrack on/off
+	*
+	*/
+	function toggleSmartTrack(){
+		$this->smarttrack = ($this->smarttrack)? false : true;
+		return $this->smarttrack;
+	}
+
+
+
+	/** Get the current Smart Track Status
+	*
+	*/
+	function smartTrackStatus(){
+		return $this->smarttrack;
+	}
+
+
+	/** Get the smartTrackThreshold
+	*
+	*/
+	function smartTrackThreshold(){
+		return $this->smarttrackthreshold;
+	}
+
+
+
+	/** Set the smart Track trigger threshold
+	*
+	*/
+	function setSmartTrackThreshold($thresh){
+		$this->smarttrackthreshold = $thresh;
+	}
+
+
+
+
+
 	/** Ingest the XML and convert into an object
 	* 
 	* Also updates our reference arrays
@@ -146,16 +186,20 @@ class GPXIngest{
 		foreach ($this->xml->trk as $trk){
 
 			// Initialise the stats variables
+			/*
 			$this->ftimes = array();
 			$this->fspeed = array();
 			$this->trackduration = 0;
+			*/
+			$this->resetTrackStats();
 			$b = 0;
 
 			// Set the object key
 			//$jkey = "journey$a";
 			$jkey = $this->genTrackKey($a);
+			$this->initTrack($jkey,$trk->name);
 
-
+			/*
 			// Initialise the object
 			$this->journey->journeys->$jkey = new stdClass();
 			$this->journey->journeys->$jkey->segments = new stdClass();
@@ -165,14 +209,21 @@ class GPXIngest{
 			// Update our index array
 			$this->tracks[$jkey]['name'] = $this->journey->journeys->$jkey->name;
 			$this->tracks[$jkey]['segments'] = array();
-			
+			*/
+
+
 			// There may be multiple segments if GPS connectivity was lost - process each seperately
 			foreach ($trk->trkseg as $trkseg){
 
 				// Initialise the sub-stats variable
+				/*
 				$speed = 0;
 				$sspeed = array();
+				*/
+				$this->resetSegmentStats();
 				$x = 0;
+				$lasttime = false;
+				$times = array();
 
 				// Set the segment key
 				//$segkey = "seg$b";
@@ -192,6 +243,43 @@ class GPXIngest{
 					$ptspeed = (int)filter_var($trkpt->desc, FILTER_SANITIZE_NUMBER_INT);
 
 					$time = strtotime($trkpt->time);
+
+					// If smarttrack is enabled, check the trackpt time difference
+					if ($this->smarttrack && $lasttime && (($time - $lasttime) > $this->smarttrackthreshold)){
+
+						// We need to start a new track, but first we have to finalise the stats
+						$this->writeSegmentStats($jkey,$segkey,$times,$x);
+						$this->writeTrackStats($jkey);
+						
+						// Reset the segment counter
+						$b=0;
+
+						// Update the track counter
+						$a++;
+
+						// Reset the Key
+						$x=0;
+						$key = "trackpt$x";
+						$times = array();
+
+						// Get a new track key
+						$jkey = $this->genTrackKey($a);
+						$this->initTrack($jkey,$trk->name.$a);
+
+
+						// Get a new segment key
+						$segkey = $this->genSegKey($b);
+						$this->initSegment($jkey,$segkey);
+						
+						// Reset stats
+						$this->resetTrackStats();
+						$this->resetSegmentStats();
+
+					}
+					// update lasttime
+					$lasttime = $time;
+
+
 					$this->journey->journeys->$jkey->segments->$segkey->points->$key->lat = (string) $trkpt['lat'];
 					$this->journey->journeys->$jkey->segments->$segkey->points->$key->lon = (string) $trkpt['lon'];
 					$this->journey->journeys->$jkey->segments->$segkey->points->$key->time = $time;
@@ -200,9 +288,9 @@ class GPXIngest{
 					$this->journey->journeys->$jkey->segments->$segkey->points->$key->speedint = $ptspeed;
 
 					// Calculate speed stats
-					$speed = $speed + $ptspeed;
+					$this->speed = $this->speed + $ptspeed;
 					$this->fspeed[] = $ptspeed;
-					$sspeed[] = $ptspeed;
+					$this->sspeed[] = $ptspeed;
 
 					// Update the times arrays
 					$times[] = $time;
@@ -212,7 +300,7 @@ class GPXIngest{
 					$x++;
 				}
 
-				$this->writeSegmentStats($jkey,$segkey,$times,$sspeed,$speed,$x);
+				$this->writeSegmentStats($jkey,$segkey,$times,$x);
 
   				/** Will remove once we know the function works
 				// Add the segment stats to the journey object
@@ -328,22 +416,37 @@ class GPXIngest{
 
 
 
+	/** Initialise a track object
+	*
+	*/
+	function initTrack($jkey,$trk){
+
+		$this->journey->journeys->$jkey = new stdClass();
+		$this->journey->journeys->$jkey->segments = new stdClass();
+		$this->journey->journeys->$jkey->name = (string) $trk;
+		$this->journey->journeys->$jkey->stats->journeyDuration = 0;
+		$this->tracks[$jkey]['name'] = $this->journey->journeys->$jkey->name;
+		$this->tracks[$jkey]['segments'] = array();
+	}
+
+
+
 	/** Write stats for the current segment
 	*
 	*/
-	function writeSegmentStats($jkey,$segkey,$times,$sspeed,$speed,$x){
+	function writeSegmentStats($jkey,$segkey,$times,$x){
 		$start = min($times);
 		$end = max($times);
 		$duration = $end - $start;
-		$modesearch = array_count_values($sspeed); 
+		$modesearch = array_count_values($this->sspeed); 
 
-		$this->journey->journeys->$jkey->segments->$segkey->stats->avgspeed = round($speed/$x,2);
+		$this->journey->journeys->$jkey->segments->$segkey->stats->avgspeed = round($this->speed/$x,2);
 		$this->journey->journeys->$jkey->segments->$segkey->stats->start = $start;
 		$this->journey->journeys->$jkey->segments->$segkey->stats->end = $end;
 		$this->journey->journeys->$jkey->segments->$segkey->stats->journeyDuration = $duration;
 		$this->journey->journeys->$jkey->segments->$segkey->stats->modalSpeed = array_search(max($modesearch), $modesearch);
-		$this->journey->journeys->$jkey->segments->$segkey->stats->minSpeed = min($sspeed);
-		$this->journey->journeys->$jkey->segments->$segkey->stats->maxSpeed = max($sspeed);
+		$this->journey->journeys->$jkey->segments->$segkey->stats->minSpeed = min($this->sspeed);
+		$this->journey->journeys->$jkey->segments->$segkey->stats->maxSpeed = max($this->sspeed);
 
 
 		// Increase the track duration by the time of our segment
@@ -401,8 +504,23 @@ class GPXIngest{
 
 
 
+	/** Reset the track stats counter
+	*
+	*/
+	function resetTrackStats(){
+		$this->ftimes = array();
+		$this->fspeed = array();
+		$this->trackduration = 0;
+	}
 
 
+	/** Reset the segments stats counter
+	*
+	*/
+	function resetSegmentStats(){
+		$this->speed = 0;
+		$this->sspeed = array();
+	}
 
 
 
