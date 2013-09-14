@@ -382,6 +382,14 @@ class GPXIngest{
 		$this->journey->stats->modalSpeed = array_search(max($modesearch),$modesearch);
 		$this->journey->stats->avgspeed = round(array_sum($this->journeyspeeds) / $this->journey->stats->trackpoints,2);
 
+
+		// Add any relevant metadata
+		$this->journey->metadata = new stdClass();
+		$this->journey->metadata->smartTrackStatus = ($this->smartTrackStatus())? 'enabled' : 'disabled';
+		$this->journey->metadata->smartTrackThreshold = $this->smartTrackThreshold();
+		$this->journey->metadata->suppression = array();
+
+
 		// XML Ingest and conversion done!
 	}
 
