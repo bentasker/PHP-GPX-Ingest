@@ -25,6 +25,10 @@ class GPXIngest{
 	var $trackduration;
 	var $smarttrack=true;
 	var $smarttrackthreshold = 3600;
+	var $suppresslocation = false;
+	var $suppressspeed = false;
+	var $suppresselevation = false;
+	var $suppressdate = false;
 
 
 
@@ -74,6 +78,7 @@ class GPXIngest{
 			return false;
 		}
 	}
+
 
 
 	/** Load a JSON string into the object
@@ -176,7 +181,11 @@ class GPXIngest{
 		$this->journey->created->creator = (string) $this->xml['creator'];
 		$this->journey->created->version = (string) $this->xml['version'];
 		$this->journey->created->format = 'GPX';
-		$this->journey->created->time = strtotime($this->xml->time);
+
+		if (!$this->suppressdate && isset($this->xml->time)){
+			$this->journey->created->time = strtotime($this->xml->time);
+		}
+
 		$this->journey->timezone = date_default_timezone_get();
 
 	
@@ -276,25 +285,40 @@ class GPXIngest{
 						$this->resetSegmentStats();
 
 					}
-					// update lasttime
-					$lasttime = $time;
 
 
-					$this->journey->journeys->$jkey->segments->$segkey->points->$key->lat = (string) $trkpt['lat'];
-					$this->journey->journeys->$jkey->segments->$segkey->points->$key->lon = (string) $trkpt['lon'];
-					$this->journey->journeys->$jkey->segments->$segkey->points->$key->time = $time;
-					$this->journey->journeys->$jkey->segments->$segkey->points->$key->speed = (string) $trkpt->desc;
-					$this->journey->journeys->$jkey->segments->$segkey->points->$key->elevation = (string) $trkpt->ele;
-					$this->journey->journeys->$jkey->segments->$segkey->points->$key->speedint = $ptspeed;
+					// Write the track data - take into account whether we've suppressed any data elements
+					if (!$this->suppresslocation){
+						$this->journey->journeys->$jkey->segments->$segkey->points->$key->lat = (string) $trkpt['lat'];
+						$this->journey->journeys->$jkey->segments->$segkey->points->$key->lon = (string) $trkpt['lon'];
+					}
 
-					// Calculate speed stats
-					$this->speed = $this->speed + $ptspeed;
-					$this->fspeed[] = $ptspeed;
-					$this->sspeed[] = $ptspeed;
+					if (!$this->suppresselevation){
+						$this->journey->journeys->$jkey->segments->$segkey->points->$key->elevation = (string) $trkpt->ele;
+					}
 
-					// Update the times arrays
-					$times[] = $time;
-					
+					if (!$this->suppressdate){
+						$this->journey->journeys->$jkey->segments->$segkey->points->$key->time = $time;
+						// Update the times arrays
+						$times[] = $time;
+
+						// update lasttime - used by SmartTrack
+						$lasttime = $time;
+					}
+
+
+					if (!$this->suppressspeed){
+						$this->journey->journeys->$jkey->segments->$segkey->points->$key->speed = (string) $trkpt->desc;
+						$this->journey->journeys->$jkey->segments->$segkey->points->$key->speedint = $ptspeed;
+
+						// Calculate speed stats
+						$this->speed = $this->speed + $ptspeed;
+						$this->fspeed[] = $ptspeed;
+						$this->sspeed[] = $ptspeed;
+					}else{
+						// We also use the speed array to identify the number of trackpoints
+						$this->fspeed[] = 1;
+					}
 
 					// Up the counters
 					$x++;
@@ -374,14 +398,19 @@ class GPXIngest{
 		$modesearch = array_count_values($this->journeyspeeds);
 		
 
-		// Finalise the object stats
-		$this->journey->stats->start = min($this->totaltimes);
-		$this->journey->stats->end = max($this->totaltimes);
-		$this->journey->stats->maxSpeed = max($this->highspeeds);
-		$this->journey->stats->minSpeed = min($this->lowspeeds);
-		$this->journey->stats->modalSpeed = array_search(max($modesearch),$modesearch);
-		$this->journey->stats->avgspeed = round(array_sum($this->journeyspeeds) / $this->journey->stats->trackpoints,2);
+		// Finalise the object stats - again take suppression into account
 
+		if (!$this->suppressdate){
+			$this->journey->stats->start = min($this->totaltimes);
+			$this->journey->stats->end = max($this->totaltimes);
+		}
+
+		if (!$this->suppressspeed){
+			$this->journey->stats->maxSpeed = max($this->highspeeds);
+			$this->journey->stats->minSpeed = min($this->lowspeeds);
+			$this->journey->stats->modalSpeed = array_search(max($modesearch),$modesearch);
+			$this->journey->stats->avgspeed = round(array_sum($this->journeyspeeds) / $this->journey->stats->trackpoints,2);
+		}
 
 		// Add any relevant metadata
 		$this->journey->metadata = new stdClass();
@@ -389,11 +418,33 @@ class GPXIngest{
 		$this->journey->metadata->smartTrackThreshold = $this->smartTrackThreshold();
 		$this->journey->metadata->suppression = array();
 
+		$this->writeSuppressionMetadata();
 
 		// XML Ingest and conversion done!
 	}
 
 
+
+
+	/** Update the Journey object's metadata to include details of what information (if any) was suppressed at ingest
+	*
+	*/
+	function writeSuppressionMetadata(){
+
+		if ($this->suppresslocation){
+			$this->journey->metadata->suppression[] = 'location';
+		}
+		if ($this->suppressspeed){
+			$this->journey->metadata->suppression[] = 'speed';
+		}
+		if ($this->suppresselevation){
+			$this->journey->metadata->suppression[] = 'elevation';
+		}
+		if ($this->suppressdate){
+			$this->journey->metadata->suppression[] = 'dates';
+		}
+
+	}
 
 
 	/** Generate a track identifier
@@ -443,33 +494,40 @@ class GPXIngest{
 	*
 	*/
 	function writeSegmentStats($jkey,$segkey,$times,$x){
-		$start = min($times);
-		$end = max($times);
-		$duration = $end - $start;
-		$modesearch = array_count_values($this->sspeed); 
-
-		$this->journey->journeys->$jkey->segments->$segkey->stats->avgspeed = round($this->speed/$x,2);
-		$this->journey->journeys->$jkey->segments->$segkey->stats->start = $start;
-		$this->journey->journeys->$jkey->segments->$segkey->stats->end = $end;
-		$this->journey->journeys->$jkey->segments->$segkey->stats->journeyDuration = $duration;
-		$this->journey->journeys->$jkey->segments->$segkey->stats->modalSpeed = array_search(max($modesearch), $modesearch);
-		$this->journey->journeys->$jkey->segments->$segkey->stats->minSpeed = min($this->sspeed);
-		$this->journey->journeys->$jkey->segments->$segkey->stats->maxSpeed = max($this->sspeed);
 
 
-		// Increase the track duration by the time of our segment
-		$this->journey->journeys->$jkey->stats->journeyDuration = $this->journey->journeys->$jkey->stats->journeyDuration + $duration;
-		$this->trackduration = $this->trackduration + $this->journey->journeys->$jkey->stats->journeyDuration;
+		if (!$this->suppressspeed){
+			$modesearch = array_count_values($this->sspeed); 
+			$this->journey->journeys->$jkey->segments->$segkey->stats->avgspeed = round($this->speed/$x,2);
+			$this->journey->journeys->$jkey->segments->$segkey->stats->modalSpeed = array_search(max($modesearch), $modesearch);
+			$this->journey->journeys->$jkey->segments->$segkey->stats->minSpeed = min($this->sspeed);
+			$this->journey->journeys->$jkey->segments->$segkey->stats->maxSpeed = max($this->sspeed);
 
-		// Update the index
+		}
+
+
+		if (!$this->suppressdate){
+			$start = min($times);
+			$end = max($times);
+			$duration = $end - $start;
+			$this->journey->journeys->$jkey->segments->$segkey->stats->start = $start;
+			$this->journey->journeys->$jkey->segments->$segkey->stats->end = $end;
+			$this->journey->journeys->$jkey->segments->$segkey->stats->journeyDuration = $duration;
+
+			// Increase the track duration by the time of our segment
+			$this->journey->journeys->$jkey->stats->journeyDuration = $this->journey->journeys->$jkey->stats->journeyDuration + $duration;
+			$this->trackduration = $this->trackduration + $this->journey->journeys->$jkey->stats->journeyDuration;
+
+			// We only need to add the min/max times to the track as we've already sorted the segment
+			$this->ftimes[] = $this->journey->journeys->$jkey->segments->$segkey->stats->start;
+			$this->ftimes[] = $this->journey->journeys->$jkey->segments->$segkey->stats->end;
+		}
+
+
+
+		// Update the indexes
 		$this->tracks[$jkey]['segments'][$segkey] = $x++;
-
-		// We only need to add the min/max times to the track as we've already sorted the segment
-		$this->ftimes[] = $this->journey->journeys->$jkey->segments->$segkey->stats->start;
-		$this->ftimes[] = $this->journey->journeys->$jkey->segments->$segkey->stats->end;
 		$this->journey->stats->segments++;
-
-
 
 	}
 
@@ -479,35 +537,39 @@ class GPXIngest{
 	*/
 	function writeTrackStats($jkey){
 
-		$sumspeed = array_sum($this->fspeed);
+		// If speed is suppressed we'll have pushed 1 into the array for each trackpart.
 		$ptcount = count($this->fspeed);
-		$modesearch = array_count_values($this->fspeed); 
-		$this->journeyspeeds = array_merge($this->journeyspeeds,$this->fspeed);
 
+		if (!$this->suppressspeed){
+			$sumspeed = array_sum($this->fspeed);
+			$modesearch = array_count_values($this->fspeed); 
+			$this->journeyspeeds = array_merge($this->journeyspeeds,$this->fspeed);
+			$this->journey->journeys->$jkey->stats->maxSpeed = max($this->fspeed);
+			$this->journey->journeys->$jkey->stats->minSpeed = min($this->fspeed);			
+			$this->journey->journeys->$jkey->stats->modalSpeed = array_search(max($modesearch), $modesearch);
+			$this->journey->journeys->$jkey->stats->avgspeed = round($sumspeed/$ptcount,2);	
 
-		// Finalise the track stats
-		$this->journey->journeys->$jkey->stats->start = min($this->ftimes);
-		$this->journey->journeys->$jkey->stats->end = max($this->ftimes);
-		$this->journey->journeys->$jkey->stats->avgspeed = round($sumspeed/$ptcount,2);	
-		$this->journey->journeys->$jkey->stats->recordedDuration = $this->trackduration;
-		$this->journey->journeys->$jkey->stats->maxSpeed = max($this->fspeed);
-		$this->journey->journeys->$jkey->stats->minSpeed = min($this->fspeed);			
-		$this->journey->journeys->$jkey->stats->modalSpeed = array_search(max($modesearch), $modesearch);
+			// Add the calculated max/min speeds to the Journey wide stats
+			$this->highspeeds[] = $this->journey->journeys->$jkey->stats->maxSpeed;
+			$this->lowspeeds[] = $this->journey->journeys->$jkey->stats->minSpeed;
+		}
 
+		if (!$this->suppressdate){
+			// Finalise the track stats
+			$this->journey->journeys->$jkey->stats->start = min($this->ftimes);
+			$this->journey->journeys->$jkey->stats->end = max($this->ftimes);
 
-		// Add the calculated max/min speeds to the Journey wide stats
-		$this->highspeeds[] = $this->journey->journeys->$jkey->stats->maxSpeed;
-		$this->lowspeeds[] = $this->journey->journeys->$jkey->stats->minSpeed;
+			$this->journey->journeys->$jkey->stats->recordedDuration = $this->trackduration;
 
+			// Update the object times
+			$this->totaltimes[] = $this->journey->journeys->$jkey->stats->start;
+			$this->totaltimes[] = $this->journey->journeys->$jkey->stats->end;
+			$this->journey->stats->recordedDuration = $this->journey->stats->recordedDuration + $this->trackduration;
+		}
 
 		// Update the object totals
 		$this->journey->stats->trackpoints = $this->journey->stats->trackpoints + $ptcount;
-		$this->journey->stats->recordedDuration = $this->journey->stats->recordedDuration + $this->trackduration;
-	
 		$this->journey->stats->tracks++;
-		$this->totaltimes[] = $this->journey->journeys->$jkey->stats->start;
-		$this->totaltimes[] = $this->journey->journeys->$jkey->stats->end;
-
 	}
 
 
@@ -783,6 +845,62 @@ class GPXIngest{
 	*/
 	function getObject(){
 		return $this->journey;
+	}
+
+
+
+	/**           ----   Suppression Functions    ----    */
+
+	/** Suppress elements of the data
+	*
+	*/
+	function suppress($ele){
+
+		switch($ele){
+			case 'location':
+				$this->suppresslocation = true;
+			break;
+
+			case 'speed':
+				$this->suppressspeed = true;
+			break;
+
+			case 'elevation':
+				$this->suppresselevation = true;
+			break;
+
+			case 'date':
+				$this->suppressdate = true;
+			break;
+
+		}
+	}
+
+
+
+	/** Unsuppress elements of the data
+	*
+	*/
+	function unsuppress($ele){
+
+		switch($ele){
+			case 'location':
+				$this->suppresslocation = false;
+			break;
+
+			case 'speed':
+				$this->suppressspeed = false;
+			break;
+
+			case 'elevation':
+				$this->suppresselevation = false;
+			break;
+
+			case 'date':
+				$this->suppressdate = false;
+			break;
+
+		}
 	}
 
 
