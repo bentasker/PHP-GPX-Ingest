@@ -591,6 +591,13 @@ class GPXIngest{
 
 
 
+	/** Get the XML name of a specific Track
+	*
+	* @return string
+	*/
+	public function getTrackName($jkey){
+		return $this->journey->journeys->$jkey->name;
+	}
 
 
 	/** Get the time the original GPX file was created
