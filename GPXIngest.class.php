@@ -196,6 +196,8 @@ class GPXIngest{
 		$this->lowspeeds = array();
 		$this->accels = array();
 		$this->decels = array();
+		$this->jeles = array();
+		$this->jeledevs = array();
 		
 
 		// Add the metadata
@@ -307,8 +309,20 @@ class GPXIngest{
 						if ($lastele){
 							$change = $ele - $lastele;
 						}
-						$this->journey->journeys->$jkey->segments->$segkey->points->$key->elevationChange = $change;
 
+						$this->journey->journeys->$jkey->segments->$segkey->points->$key->elevationChange = $change;
+						
+						// Update the stats arrays - should be able to make this more efficient later
+						$this->jeles[] = $ele;
+						$this->seles[] = $ele;
+						$this->feles[] = $ele;
+
+						$this->jeledevs[] = $change;
+						$this->seledevs[] = $change;
+						$this->feledevs[] = $change;
+						
+
+						// Update the elevation for the next time round the block	
 						$lastele = $ele;
 					}
 
@@ -398,6 +412,14 @@ class GPXIngest{
 			$this->journey->stats->avgdeceleration = round(array_sum($this->decels)/count($this->accels),2);
 
 		}
+
+		if (!$this->suppresselevation){
+			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation = new stdClass();
+			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->max = max($this->jeles);
+			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->min = min($this->jeles);
+			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->avgChange = round(array_sum($this->jeledevs)/count($this->jeledevs),2);
+		}
+
 
 		// Add any relevant metadata
 		$this->journey->metadata = new stdClass();
@@ -545,6 +567,7 @@ class GPXIngest{
 		$this->journey->journeys->$jkey->stats->avgdeceleration = 0;
 		$this->journey->journeys->$jkey->stats->speedUoM = array();
 
+
 		$this->tracks[$jkey]['name'] = $this->journey->journeys->$jkey->name;
 		$this->tracks[$jkey]['segments'] = array();
 
@@ -588,7 +611,12 @@ class GPXIngest{
 			$this->ftimes[] = $this->journey->journeys->$jkey->segments->$segkey->stats->end;
 		}
 
-
+		if (!$this->suppresselevation){
+			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation = new stdClass();
+			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->max = max($this->seles);
+			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->min = min($this->seles);
+			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->avgChange = round(array_sum($this->seledevs)/count($this->seledevs),2);
+		}
 
 		// Update the indexes
 		$this->tracks[$jkey]['segments'][$segkey] = $x++;
@@ -640,6 +668,14 @@ class GPXIngest{
 			$this->journey->stats->recordedDuration = $this->journey->stats->recordedDuration + $this->trackduration;
 		}
 
+		if (!$this->suppresselevation){
+			$this->journey->journeys->$jkey->stats->elevation = new stdClass();
+			$this->journey->journeys->$jkey->stats->elevation->max = max($this->feles);
+			$this->journey->journeys->$jkey->stats->elevation->min = min($this->feles);
+			$this->journey->journeys->$jkey->stats->elevation->avgChange = round(array_sum($this->feledevs)/count($this->feledevs),2);
+		}
+
+
 		// Update the object totals
 		$this->journey->stats->trackpoints = $this->journey->stats->trackpoints + $ptcount;
 		$this->journey->stats->tracks++;
@@ -656,6 +692,8 @@ class GPXIngest{
 		$this->trackduration = 0;
 		$this->faccel = array();
 		$this->fdecel = array();
+		$this->feles = array();
+		$this->feledevs = array();
 	}
 
 
@@ -665,6 +703,8 @@ class GPXIngest{
 	private function resetSegmentStats(){
 		$this->speed = 0;
 		$this->sspeed = array();
+		$this->seles = array();
+		$this->seledevs = array();
 	}
 
 
