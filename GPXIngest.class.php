@@ -32,6 +32,7 @@ class GPXIngest{
 	private $lastspeed = false;
 	private $lastspeedm = false;
 	private $ingest_version = 1.02;
+	private $entryperiod = 0;
 
 
 
@@ -187,6 +188,8 @@ class GPXIngest{
 		$this->journey->stats->speedUoM = array();
 		$this->journey->stats->timeMoving = 0;
 		$this->journey->stats->timeStationary = 0;
+		$this->journey->stats->timeAccelerating = 0;
+		$this->journey->stats->timeDecelerating = 0;
 
 		// Initialise the stats array
 		$this->totaltimes = array();
@@ -236,7 +239,6 @@ class GPXIngest{
 				*/
 				$this->resetSegmentStats();
 				$x = 0;
-				$lasttime = false;
 				$times = array();
 				$lastele = false;
 				$timemoving = 0;
@@ -264,7 +266,7 @@ class GPXIngest{
 					$time = strtotime($trkpt->time);
 
 					// If smarttrack is enabled, check the trackpt time difference
-					if ($this->smarttrack && $lasttime && (($time - $lasttime) > $this->smarttrackthreshold)){
+					if ($this->smarttrack && $this->lasttimestamp && ($this->entryperiod > $this->smarttrackthreshold)){
 
 						// We need to start a new track, but first we have to finalise the stats
 						$this->writeSegmentStats($jkey,$segkey,$times,$x);
@@ -297,17 +299,25 @@ class GPXIngest{
 					}
 
 
+					// Calculate the period to which this trackpoint relates
+					if ($this->lasttimestamp){
+						$this->entryperiod = $time - $this->lasttimestamp;
 
-					// Calculate time moving/stationary etc
-					if ($this->lastspeed && $this->lasttimestamp){
+						// Calculate time moving/stationary etc
+						if ($this->lastspeed){
 
-						if ($ptspeed > 0){
-							$timemoving = $timemoving + ($time - $this->lasttimestamp);
-						}else{
-							$timestationary = $timestationary + ($time - $this->lasttimestamp);
+							if ($ptspeed > 0){
+								$timemoving = $timemoving + $this->entryperiod;
+							}else{
+								$timestationary = $timestationary + $this->entryperiod;
+							}
+
 						}
 
 					}
+
+
+		
 
 
 					// Write the track data - take into account whether we've suppressed any data elements
@@ -501,19 +511,28 @@ class GPXIngest{
 
 
 		// We'll worry about whether it's accel or decel after doing the maths
-		$velocity_change = ($speed - $this->lastspeedm) / ($timestamp - $this->lasttimestamp);
+		$velocity_change = ($speed - $this->lastspeedm) / $this->entryperiod;
 
 		if ($velocity_change < 0){
 			// It's deceleration
 			$deceleration = round(($velocity_change*-1),4);
 			$this->fdecel[] = $deceleration;
 			$this->decels[] = $deceleration;
+			$this->timedecel = $this->timedecel + $this->entryperiod;
 		}else{
 			// It's acceleration
 			$acceleration = round($velocity_change,4);
 			$this->faccel[] = $acceleration;
 			$this->accels[] = $acceleration;
+
+			if ($velocity_change != 0){
+				$this->timeaccel = $this->timeaccel + $this->entryperiod;
+			}
 		}
+
+		
+		
+
 
 		$this->lastspeedm = $speed;
 		$this->lasttimestamp = $timestamp;
@@ -589,6 +608,8 @@ class GPXIngest{
 		$this->journey->journeys->$jkey->stats->speedUoM = array();
 		$this->journey->journeys->$jkey->stats->timeMoving = 0;
 		$this->journey->journeys->$jkey->stats->timeStationary = 0;
+		$this->journey->journeys->$jkey->stats->timeAccelerating = 0;
+		$this->journey->journeys->$jkey->stats->timeDecelerating = 0;
 
 
 		$this->tracks[$jkey]['name'] = $this->journey->journeys->$jkey->name;
@@ -648,6 +669,16 @@ class GPXIngest{
 		$this->journey->journeys->$jkey->stats->timeStationary = $this->journey->journeys->$jkey->stats->timeStationary + $timestationary;
 		$this->journey->stats->timeMoving = $this->journey->stats->timeMoving + $timemoving;
 		$this->journey->stats->timeStationary = $this->journey->stats->timeStationary + $timestationary;
+
+
+		// Update the accel stats - has to assume you spent the chunk accelerating so may be inaccurate
+		$this->journey->journeys->$jkey->segments->$segkey->stats->timeAccelerating = $this->timeaccel;
+		$this->journey->journeys->$jkey->segments->$segkey->stats->timeDecelerating = $this->timedecel;
+		$this->journey->journeys->$jkey->stats->timeAccelerating = $this->journey->journeys->$jkey->stats->timeAccelerating + $this->timeaccel;
+		$this->journey->journeys->$jkey->stats->timeDecelerating = $this->journey->journeys->$jkey->stats->timeDecelerating + $this->timedecel;
+		$this->journey->stats->timeAccelerating = $this->journey->stats->timeAccelerating + $this->timeaccel;
+		$this->journey->stats->timeDecelerating = $this->journey->stats->timeDecelerating + $this->timedecel;
+
 
 		// Update the indexes
 		$this->tracks[$jkey]['segments'][$segkey] = $x++;
@@ -736,6 +767,8 @@ class GPXIngest{
 		$this->sspeed = array();
 		$this->seles = array();
 		$this->seledevs = array();
+		$this->timeaccel = 0;
+		$this->timedecel = 0;
 	}
 
 
