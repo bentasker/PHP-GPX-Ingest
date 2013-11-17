@@ -30,7 +30,7 @@ class GPXIngest{
 	private $suppresselevation = false;
 	private $suppressdate = false;
 	private $lastspeed = false;
-
+	private $ingest_version = 1.02;
 
 
 
@@ -183,6 +183,9 @@ class GPXIngest{
 		$this->journey->stats->mindeceleration = 0;
 		$this->journey->stats->avgacceleration = 0;
 		$this->journey->stats->avgdeceleration = 0;
+
+		// Add a version number so the object can be used to identify which stats will/won't be present
+		$this->journey->GPXIngestVersion = $this->ingest_version;
 
 
 		// Initialise the stats array
