@@ -183,6 +183,7 @@ class GPXIngest{
 		$this->journey->stats->mindeceleration = 0;
 		$this->journey->stats->avgacceleration = 0;
 		$this->journey->stats->avgdeceleration = 0;
+		$this->journey->stats->speedUoM = array();
 
 		// Add a version number so the object can be used to identify which stats will/won't be present
 		$this->journey->GPXIngestVersion = $this->ingest_version;
@@ -251,6 +252,9 @@ class GPXIngest{
 					// Initialise some variables
 					$key = "trackpt$x";
 					$ptspeed = (int)filter_var($trkpt->desc, FILTER_SANITIZE_NUMBER_INT);
+					$speed_string = (string) $trkpt->desc;
+
+
 
 					$time = strtotime($trkpt->time);
 
@@ -309,7 +313,12 @@ class GPXIngest{
 
 
 					if (!$this->suppressspeed){
-						$this->journey->journeys->$jkey->segments->$segkey->points->$key->speed = (string) $trkpt->desc;
+
+						// What is the speed recorded in?
+						$unit = strtolower(substr(rtrim($speed_string),strlen($speed_string)-3));
+
+
+						$this->journey->journeys->$jkey->segments->$segkey->points->$key->speed = $speed_string;
 						$this->journey->journeys->$jkey->segments->$segkey->points->$key->speedint = $ptspeed;
 
 						// Calculate speed stats
@@ -319,9 +328,23 @@ class GPXIngest{
 
 
 						// Calculate acceleration
-						list($acc,$decc) = $this->calculateAcceleration((string) $trkpt->desc,$time);
+						list($acc,$decc) = $this->calculateAcceleration($ptspeed,$time,$unit);
 						$this->journey->journeys->$jkey->segments->$segkey->points->$key->acceleration = $acc;
 						$this->journey->journeys->$jkey->segments->$segkey->points->$key->deceleration = $decc;
+
+						// There shouldn't usually be more than one UoM per track file, but you never know - that's why it's an array
+						if (!in_array($unit,$this->journey->stats->speedUoM)){
+							$this->journey->stats->speedUoM[] = $unit;
+						}
+
+						// Tracks may also, plausibly, contain more than one measurement
+						if (!in_array($unit,$this->journey->journeys->$jkey->stats->speedUoM)){
+							$this->journey->journeys->$jkey->stats->speedUoM[] = $unit;
+						}
+
+						// If there's more than one unit per segment on the other hand, something's wrong!
+						
+
 
 					}else{
 						// We also use the speed array to identify the number of trackpoints
@@ -332,7 +355,7 @@ class GPXIngest{
 					$x++;
 				}
 
-				$this->writeSegmentStats($jkey,$segkey,$times,$x);
+				$this->writeSegmentStats($jkey,$segkey,$times,$x,$unit);
 				$b++;
 				
 			}
@@ -384,19 +407,19 @@ class GPXIngest{
 	*
 	* All returned values should be considered m/s^2 (i.e. the standard instrument)
 	*
-	* @arg - Speed (including Unit -i.e. KPH or MPH)
+	* @arg - Speed (not including Unit -i.e. 1 not 1 KPH or MPH)
 	* @arg - timestamp of the speed recording
+	* @arg - Unit of measurement (i.e. kph)
 	*
 	* @return array - acceleration and deceleration.
 	*
 	*/
-	private function calculateAcceleration($speed,$timestamp){
+	private function calculateAcceleration($speed,$timestamp,$unit){
 		$acceleration = 0;
 		$deceleration = 0;
 		
 		// We need to convert the speed into metres per sec
-		// Get the current unit
-		$unit = strtolower(substr(rtrim($speed),strlen($speed)-3));
+
 
 		if ($unit == 'kph'){
 			// I'm screwed if my logic is wrong here
@@ -510,6 +533,7 @@ class GPXIngest{
 		$this->journey->journeys->$jkey->stats->mindeceleration = 0;
 		$this->journey->journeys->$jkey->stats->avgacceleration = 0;
 		$this->journey->journeys->$jkey->stats->avgdeceleration = 0;
+		$this->journey->journeys->$jkey->stats->speedUoM = array();
 
 		$this->tracks[$jkey]['name'] = $this->journey->journeys->$jkey->name;
 		$this->tracks[$jkey]['segments'] = array();
@@ -523,7 +547,7 @@ class GPXIngest{
 	/** Write stats for the current segment
 	*
 	*/
-	private function writeSegmentStats($jkey,$segkey,$times,$x){
+	private function writeSegmentStats($jkey,$segkey,$times,$x,$uom){
 
 
 		if (!$this->suppressspeed){
@@ -532,6 +556,7 @@ class GPXIngest{
 			$this->journey->journeys->$jkey->segments->$segkey->stats->modalSpeed = array_search(max($modesearch), $modesearch);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->minSpeed = min($this->sspeed);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->maxSpeed = max($this->sspeed);
+			$this->journey->journeys->$jkey->segments->$segkey->stats->speedUoM = $uom;
 
 		}
 
