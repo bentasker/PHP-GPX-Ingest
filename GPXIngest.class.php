@@ -185,10 +185,6 @@ class GPXIngest{
 		$this->journey->stats->avgdeceleration = 0;
 		$this->journey->stats->speedUoM = array();
 
-		// Add a version number so the object can be used to identify which stats will/won't be present
-		$this->journey->GPXIngestVersion = $this->ingest_version;
-
-
 		// Initialise the stats array
 		$this->totaltimes = array();
 		$this->highspeeds = array();
@@ -426,6 +422,8 @@ class GPXIngest{
 		$this->journey->metadata->smartTrackStatus = ($this->smartTrackStatus())? 'enabled' : 'disabled';
 		$this->journey->metadata->smartTrackThreshold = $this->smartTrackThreshold();
 		$this->journey->metadata->suppression = array();
+		// Add a version number so the object can be used to identify which stats will/won't be present
+		$this->journey->metadata->GPXIngestVersion = $this->ingest_version;
 
 		$this->writeSuppressionMetadata();
 
