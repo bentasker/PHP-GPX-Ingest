@@ -237,6 +237,7 @@ class GPXIngest{
 				$x = 0;
 				$lasttime = false;
 				$times = array();
+				$lastele = false;
 
 				// Set the segment key
 				$segkey = $this->genSegKey($b);
@@ -299,7 +300,16 @@ class GPXIngest{
 					}
 
 					if (!$this->suppresselevation){
-						$this->journey->journeys->$jkey->segments->$segkey->points->$key->elevation = (string) $trkpt->ele;
+						$ele = (string) $trkpt->ele;
+						$this->journey->journeys->$jkey->segments->$segkey->points->$key->elevation = $ele;
+
+						$change = 0;
+						if ($lastele){
+							$change = $ele - $lastele;
+						}
+						$this->journey->journeys->$jkey->segments->$segkey->points->$key->elevationChange = $change;
+
+						$lastele = $ele;
 					}
 
 					if (!$this->suppressdate){
