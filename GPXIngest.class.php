@@ -29,6 +29,7 @@ class GPXIngest{
 	private $suppressspeed = false;
 	private $suppresselevation = false;
 	private $suppressdate = false;
+	private $lastspeed = false;
 
 
 
@@ -176,12 +177,21 @@ class GPXIngest{
 		$this->journey->stats->recordedDuration = 0;
 		$this->journey->stats->segments = 0;
 		$this->journey->stats->tracks = 0;
+		$this->journey->stats->maxacceleration = 0;
+		$this->journey->stats->maxdeceleration = 0;
+		$this->journey->stats->minacceleration = 0;
+		$this->journey->stats->mindeceleration = 0;
+		$this->journey->stats->avgacceleration = 0;
+		$this->journey->stats->avgdeceleration = 0;
+
 
 		// Initialise the stats array
 		$this->totaltimes = array();
 		$this->highspeeds = array();
 		$this->journeyspeeds = array();
 		$this->lowspeeds = array();
+		$this->accels = array();
+		$this->decels = array();
 		
 
 		// Add the metadata
@@ -303,6 +313,13 @@ class GPXIngest{
 						$this->speed = $this->speed + $ptspeed;
 						$this->fspeed[] = $ptspeed;
 						$this->sspeed[] = $ptspeed;
+
+
+						// Calculate acceleration
+						list($acc,$decc) = $this->calculateAcceleration((string) $trkpt->desc,$time);
+						$this->journey->journeys->$jkey->segments->$segkey->points->$key->acceleration = $acc;
+						$this->journey->journeys->$jkey->segments->$segkey->points->$key->deceleration = $decc;
+
 					}else{
 						// We also use the speed array to identify the number of trackpoints
 						$this->fspeed[] = 1;
@@ -337,6 +354,13 @@ class GPXIngest{
 			$this->journey->stats->minSpeed = min($this->lowspeeds);
 			$this->journey->stats->modalSpeed = array_search(max($modesearch),$modesearch);
 			$this->journey->stats->avgspeed = round(array_sum($this->journeyspeeds) / $this->journey->stats->trackpoints,2);
+			$this->journey->stats->maxacceleration = max($this->accels);
+			$this->journey->stats->maxdeceleration = max($this->decels);
+			$this->journey->stats->minacceleration = min($this->accels);
+			$this->journey->stats->mindeceleration = min($this->decels);
+			$this->journey->stats->avgacceleration = round(array_sum($this->accels)/count($this->accels),2);
+			$this->journey->stats->avgdeceleration = round(array_sum($this->decels)/count($this->accels),2);
+
 		}
 
 		// Add any relevant metadata
@@ -351,6 +375,72 @@ class GPXIngest{
 	}
 
 
+
+	/** Calculate the rate of (ac|de)celeration and update the relevant stats arrays. 
+	* Also returns the values
+	*
+	* All returned values should be considered m/s^2 (i.e. the standard instrument)
+	*
+	* @arg - Speed (including Unit -i.e. KPH or MPH)
+	* @arg - timestamp of the speed recording
+	*
+	* @return array - acceleration and deceleration.
+	*
+	*/
+	private function calculateAcceleration($speed,$timestamp){
+		$acceleration = 0;
+		$deceleration = 0;
+		
+		// We need to convert the speed into metres per sec
+		// Get the current unit
+		$unit = strtolower(substr(rtrim($speed),strlen($speed)-3));
+
+		if ($unit == 'kph'){
+			// I'm screwed if my logic is wrong here
+			// KPH -> m/s = x kph * 1000 = x metres per hour / 3600 = x metres per second
+
+			$speed = ((int)filter_var($speed, FILTER_SANITIZE_NUMBER_INT)* 1000)/3600;
+		}else{
+			// MPH. 
+			// There are 1609.344 metres to a mile, suspect we may need some rounding done on this one
+			$speed = ((int)filter_var($speed, FILTER_SANITIZE_NUMBER_INT)* 1609.344)/3600;
+		}
+
+
+
+		// Can't calculate acceleration if we don't have a previous timestamp or speed. Also don't want to falsely record acc/dec if the speed is the same.
+		if (!$this->lasttimestamp || !$this->lastspeed || $speed == $this->lastspeed){
+			$this->lasttimestamp = $timestamp;
+			$this->lastspeed = $speed;
+			return array($acceleration,$deceleration);
+		}
+
+
+
+		// We use the formula
+		// (fV - iV)/t
+
+
+		// We'll worry about whether it's accel or decel after doing the maths
+		$velocity_change = ($speed - $this->lastspeed) / ($timestamp - $this->lasttimestamp);
+
+		if ($velocity_change < 0){
+			// It's deceleration
+			$deceleration = round(($velocity_change*-1),4);
+			$this->fdecel[] = $deceleration;
+			$this->decels[] = $deceleration;
+		}else{
+			// It's acceleration
+			$acceleration = round($velocity_change,4);
+			$this->faccel[] = $acceleration;
+			$this->accels[] = $acceleration;
+		}
+
+		$this->lastspeed = $speed;
+		$this->lasttimestamp = $timestamp;
+		return array($acceleration,$deceleration);
+
+	}
 
 
 	/** Update the Journey object's metadata to include details of what information (if any) was suppressed at ingest
@@ -411,8 +501,18 @@ class GPXIngest{
 		$this->journey->journeys->$jkey->segments = new stdClass();
 		$this->journey->journeys->$jkey->name = (string) $trk;
 		$this->journey->journeys->$jkey->stats->journeyDuration = 0;
+		$this->journey->journeys->$jkey->stats->maxacceleration = 0;
+		$this->journey->journeys->$jkey->stats->maxdeceleration = 0;
+		$this->journey->journeys->$jkey->stats->minacceleration = 0;
+		$this->journey->journeys->$jkey->stats->mindeceleration = 0;
+		$this->journey->journeys->$jkey->stats->avgacceleration = 0;
+		$this->journey->journeys->$jkey->stats->avgdeceleration = 0;
+
 		$this->tracks[$jkey]['name'] = $this->journey->journeys->$jkey->name;
 		$this->tracks[$jkey]['segments'] = array();
+
+		// Used by the Acceleration calculation method
+		$this->lasttimestamp = false;
 	}
 
 
@@ -476,6 +576,14 @@ class GPXIngest{
 			$this->journey->journeys->$jkey->stats->modalSpeed = array_search(max($modesearch), $modesearch);
 			$this->journey->journeys->$jkey->stats->avgspeed = round($sumspeed/$ptcount,2);	
 
+			$this->journey->journeys->$jkey->stats->maxacceleration = max($this->faccel);
+			$this->journey->journeys->$jkey->stats->maxdeceleration = max($this->fdecel);
+			$this->journey->journeys->$jkey->stats->minacceleration = min($this->faccel);
+			$this->journey->journeys->$jkey->stats->mindeceleration = min($this->fdecel);
+
+			$this->journey->journeys->$jkey->stats->avgacceleration = round(array_sum($this->faccel)/count($this->faccel),2);
+			$this->journey->journeys->$jkey->stats->avgdeceleration = round(array_sum($this->fdecel)/count($this->fdecel),2);
+
 			// Add the calculated max/min speeds to the Journey wide stats
 			$this->highspeeds[] = $this->journey->journeys->$jkey->stats->maxSpeed;
 			$this->lowspeeds[] = $this->journey->journeys->$jkey->stats->minSpeed;
@@ -508,6 +616,8 @@ class GPXIngest{
 		$this->ftimes = array();
 		$this->fspeed = array();
 		$this->trackduration = 0;
+		$this->faccel = array();
+		$this->fdecel = array();
 	}
 
 
