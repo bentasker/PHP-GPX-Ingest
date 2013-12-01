@@ -586,6 +586,8 @@ class GPXIngest{
 	*/
 	private function initSegment($jkey,$segkey){
 		$this->journey->journeys->$jkey->segments->$segkey = new stdClass();
+		$this->lasttimestamp = false;
+		$this->entryperiod = 0;
 	}
 
 
