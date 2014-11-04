@@ -20,7 +20,10 @@ The class has the following features
 
 
 
+Issue Tracking
+----------------
 
+Issue and feature tracking is within a private JIRA instance, a HTML mirror can be viewed at http://projects.bentasker.co.uk/jira_projects/browse/GPXIN.html
 
 
 
