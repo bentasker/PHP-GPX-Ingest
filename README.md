@@ -25,7 +25,7 @@ Issue Tracking
 
 Issue and feature tracking is within a private JIRA instance, a HTML mirror can be viewed at http://projects.bentasker.co.uk/jira_projects/browse/GPXIN.html
 
-
+If you think you've found a bug, or want to ask a question, send an email to gpxingest **AT** bentasker.co.uk
 
 
 
