@@ -310,6 +310,10 @@ class GPXIngest{
 
 					}
 
+					if (!isset($this->journey->journeys->$jkey->segments->$segkey->points)){
+					      $this->journey->journeys->$jkey->segments->$segkey->points = new stdClass();
+					}
+
 					$this->journey->journeys->$jkey->segments->$segkey->points->$key = new stdClass();
 					// Calculate the period to which this trackpoint relates
 					if ($this->lasttimestamp){
