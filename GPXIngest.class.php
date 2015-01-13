@@ -172,6 +172,10 @@ class GPXIngest{
 			return false;
 		}
 
+		if (!is_object($this->journey)){
+		      $this->journey = new stdClass();
+		}
+
 		// Initialise the object
 		$this->journey->created = new stdClass();
 		$this->journey->stats = new stdClass();
@@ -298,7 +302,7 @@ class GPXIngest{
 
 					}
 
-
+					$this->journey->journeys->$jkey->segments->$segkey->points->$key = new stdClass();
 					// Calculate the period to which this trackpoint relates
 					if ($this->lasttimestamp){
 						$this->entryperiod = $time - $this->lasttimestamp;
@@ -597,8 +601,13 @@ class GPXIngest{
 	*/
 	private function initTrack($jkey,$trk){
 
+		if (!isset($this->journey->journeys)){
+		    $this->journey->journeys = new stdClass();
+		}
+
 		$this->journey->journeys->$jkey = new stdClass();
 		$this->journey->journeys->$jkey->segments = new stdClass();
+		$this->journey->journeys->$jkey->stats = new stdClass();
 		$this->journey->journeys->$jkey->name = (string) $trk;
 		$this->journey->journeys->$jkey->stats->journeyDuration = 0;
 		$this->journey->journeys->$jkey->stats->maxacceleration = 0;
@@ -628,6 +637,9 @@ class GPXIngest{
 	*/
 	private function writeSegmentStats($jkey,$segkey,$times,$x,$uom,$timemoving,$timestationary){
 
+		if (!isset($this->journey->journeys->$jkey->segments->$segkey->stats)){
+			$this->journey->journeys->$jkey->segments->$segkey->stats = new stdClass();
+		}
 
 		if (!$this->suppressspeed){
 			$modesearch = array_count_values($this->sspeed); 
