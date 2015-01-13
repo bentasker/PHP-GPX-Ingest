@@ -209,6 +209,7 @@ class GPXIngest{
 		$this->jeles = array();
 		$this->jeledevs = array();
 		$this->jdist = array(); //GPXIN-6
+		$unit = null;
 		
 
 		// Add the metadata
@@ -270,7 +271,9 @@ class GPXIngest{
 					$ptspeed = (int)filter_var($trkpt->desc, FILTER_SANITIZE_NUMBER_INT);
 					$speed_string = (string) $trkpt->desc;
 
-
+					if (!$trkpt->desc){
+					  $this->suppress('speed'); // Prevent warnings if speed is not available - See GPXIN-16
+					}
 
 					$time = strtotime($trkpt->time);
 
