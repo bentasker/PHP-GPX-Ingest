@@ -34,7 +34,7 @@ class GPXIngest{
 	private $lastspeedm = false;
 	private $ingest_version = 1.02;
 	private $entryperiod = 0;
-	private $experimentalFeatures = array(); // See GPXIN-17
+	private $experimentalFeatures = array('calcDistance'); // See GPXIN-17
 	private $featuretoggle = array();
 
 
@@ -329,8 +329,21 @@ class GPXIngest{
 
 					// Write the track data - take into account whether we've suppressed any data elements
 					if (!$this->suppresslocation){
-						$this->journey->journeys->$jkey->segments->$segkey->points->$key->lat = (string) $trkpt['lat'];
-						$this->journey->journeys->$jkey->segments->$segkey->points->$key->lon = (string) $trkpt['lon'];
+						$lat = (string) $trkpt['lat']; // let's only caste once
+						$lon = (string) $trkpt['lat'];
+
+						$this->journey->journeys->$jkey->segments->$segkey->points->$key->lat = $lat;
+						$this->journey->journeys->$jkey->segments->$segkey->points->$key->lon = $lon;
+
+						/** Implemented in GPXIN-6 - currently experimental so will generally be 0 */
+						if ($this->lastpos){
+						    $this->journey->journeys->$jkey->segments->$segkey->points->$key->travelled = $this->calculateTravelledDistance($this->lastpos,array($lat,$lon));
+						}else{
+						    $this->journey->journeys->$jkey->segments->$segkey->points->$key->travelled = 0;
+						}
+
+						$this->lastpos = array($lat,$lon); // update the reference array
+
 					}
 
 					if (!$this->suppresselevation){
@@ -594,6 +607,7 @@ class GPXIngest{
 	private function initSegment($jkey,$segkey){
 		$this->journey->journeys->$jkey->segments->$segkey = new stdClass();
 		$this->lasttimestamp = false;
+		$this->lastpos = false;
 		$this->entryperiod = 0;
 	}
 
@@ -760,6 +774,33 @@ class GPXIngest{
 		$this->journey->stats->tracks++;
 	}
 
+
+	/** Calculate the distance between two lat/lon points - see GPXIN-6
+	*
+	* @arg array - (lat,lon) - the previous position
+	* @arg array - (lat,lon) - the current position
+	*
+	* @return distance travelled (feet)
+	*/
+	protected function calculateTravelledDistance($old,$new){
+
+
+	  if (!$this->expisenabled('calcDistance')){ // This functionality is currently considered experimental
+		  return 0;
+	  }
+
+	  // Array mapping (for ease of reference
+	  // lon1 - old[0]
+          // lon2 - new[0]
+          // lat1 - old[1]
+          // lat2 - new [1]
+
+	  $theta = $old[0] - $new[0];
+	  $dist = acos(sin(deg2rad($old[1])) * sin(deg2rad($new[1])) +  cos(deg2rad($old[1])) * cos(deg2rad($new[1])) * cos(deg2rad($theta)));
+	  $dist = rad2deg($dist);
+
+	  return round(($dist * 60 * 1.1515) * 5280,3); // Convert to feet and round to 3 decimal places
+	}
 
 
 	/** Reset the track stats counter
