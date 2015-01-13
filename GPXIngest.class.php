@@ -9,6 +9,7 @@
 *
 * @version 1.2
 *
+* Where issue keys are included (GPXIN-[0-9]+), the relevant issue can be viewed at http://projects.bentasker.co.uk/jira_projects/browse/GPXIN.html
 */
 
 class GPXIngest{
