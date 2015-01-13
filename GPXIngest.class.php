@@ -423,6 +423,7 @@ class GPXIngest{
 					}else{
 						// We also use the speed array to identify the number of trackpoints
 						$this->fspeed[] = 1;
+						$unit = null;
 					}
 
 
