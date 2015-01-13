@@ -197,6 +197,7 @@ class GPXIngest{
 		$this->journey->stats->timeStationary = 0;
 		$this->journey->stats->timeAccelerating = 0;
 		$this->journey->stats->timeDecelerating = 0;
+		$this->journey->stats->distanceTravelled = 0;
 
 		// Initialise the stats array
 		$this->totaltimes = array();
@@ -207,6 +208,7 @@ class GPXIngest{
 		$this->decels = array();
 		$this->jeles = array();
 		$this->jeledevs = array();
+		$this->jdist = array(); //GPXIN-6
 		
 
 		// Add the metadata
@@ -336,14 +338,14 @@ class GPXIngest{
 						$this->journey->journeys->$jkey->segments->$segkey->points->$key->lon = $lon;
 
 						/** Implemented in GPXIN-6 - currently experimental so will generally be 0 */
-						if ($this->lastpos){
-						    $this->journey->journeys->$jkey->segments->$segkey->points->$key->travelled = $this->calculateTravelledDistance($this->lastpos,array($lat,$lon));
-						}else{
-						    $this->journey->journeys->$jkey->segments->$segkey->points->$key->travelled = 0;
-						}
+						$dist = ($this->lastpos)? $this->calculateTravelledDistance($this->lastpos,array($lat,$lon)) : 0;
 
 						$this->lastpos = array($lat,$lon); // update the reference array
 
+						// Update the stats arrays
+						$this->fdist[] = $dist;
+						$this->sdist[] = $dist;
+						$this->jdist[] = $dist;
 					}
 
 					if (!$this->suppresselevation){
@@ -470,6 +472,9 @@ class GPXIngest{
 			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->avgChange = round(array_sum($this->jeledevs)/count($this->jeledevs),2);
 		}
 
+		if (!$this->suppresslocation){
+			$this->journey->stats->distanceTravelled = array_sum($this->jdist); // See GPXIN-6
+		}
 
 		// Add any relevant metadata
 		$this->journey->metadata = new stdClass();
@@ -638,7 +643,7 @@ class GPXIngest{
 		$this->journey->journeys->$jkey->stats->timeStationary = 0;
 		$this->journey->journeys->$jkey->stats->timeAccelerating = 0;
 		$this->journey->journeys->$jkey->stats->timeDecelerating = 0;
-
+		$this->journey->journeys->$jkey->stats->distanceTravelled = 0;
 
 		$this->tracks[$jkey]['name'] = $this->journey->journeys->$jkey->name;
 		$this->tracks[$jkey]['segments'] = array();
@@ -666,6 +671,12 @@ class GPXIngest{
 			$this->journey->journeys->$jkey->segments->$segkey->stats->maxSpeed = max($this->sspeed);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->speedUoM = $uom;
 
+		}
+
+
+		// Calculate the total distance travelled (feet)
+		if (!$this->suppresslocation){
+			$this->journey->journeys->$jkey->segments->$segkey->stats->distanceTravelled = array_sum($this->sdist);
 		}
 
 
@@ -748,6 +759,10 @@ class GPXIngest{
 			$this->lowspeeds[] = $this->journey->journeys->$jkey->stats->minSpeed;
 		}
 
+		if (!$this->suppresslocation){
+			$this->journey->journeys->$jkey->stats->distanceTravelled = array_sum($this->fdist);
+		}
+
 		if (!$this->suppressdate){
 			// Finalise the track stats
 			$this->journey->journeys->$jkey->stats->start = min($this->ftimes);
@@ -799,7 +814,9 @@ class GPXIngest{
 	  $dist = acos(sin(deg2rad($old[1])) * sin(deg2rad($new[1])) +  cos(deg2rad($old[1])) * cos(deg2rad($new[1])) * cos(deg2rad($theta)));
 	  $dist = rad2deg($dist);
 
-	  return round(($dist * 60 * 1.1515) * 5280,3); // Convert to feet and round to 3 decimal places
+	  $res = round(($dist * 60 * 1.1515) * 5280,3); // Convert to feet and round to 3 decimal places
+
+	  return (is_nan($res))? 0 : $res;
 	}
 
 
@@ -814,6 +831,7 @@ class GPXIngest{
 		$this->fdecel = array();
 		$this->feles = array();
 		$this->feledevs = array();
+		$this->fdist = array();
 	}
 
 
@@ -827,6 +845,7 @@ class GPXIngest{
 		$this->seledevs = array();
 		$this->timeaccel = 0;
 		$this->timedecel = 0;
+		$this->sdist = array();
 	}
 
 
