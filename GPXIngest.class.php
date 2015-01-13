@@ -33,6 +33,8 @@ class GPXIngest{
 	private $lastspeedm = false;
 	private $ingest_version = 1.02;
 	private $entryperiod = 0;
+	private $experimentalFeatures = array(); // See GPXIN-17
+	private $featuretoggle = array();
 
 
 
@@ -1114,5 +1116,63 @@ class GPXIngest{
 		}
 	}
 
+
+
+	/** Identify whether an experimental feature has been enabled
+	*
+	* @arg type
+	*
+	* @return boolean
+	*/
+	protected function expisenabled($type){
+	      return isset($this->featuretoggle[$type]);
+	}
+
+
+
+	/** Enable functionality which is considered experimental or computationally expensive
+	*
+	* @arg type - the element to enable
+	*
+	* @return void
+	*/
+	public function enableExperimental($type){
+
+		if (in_array($type,$this->experimentalFeatures)){
+		      $this->featuretoggle[$type] = 1;
+		}
+	}
+
+
+
+	/** Disable functionality which is considered experimental or computationally expensive
+	*
+	* @arg type - the element to enable
+	*
+	* @return void
+	*/
+	public function disableExperimental($type){
+		if (isset($this->featuretoggle[$type])){
+		      unset($this->featuretoggle[$type]);
+		}
+	}
+
+
+
+	/** List experimental features and indicate whether they are currently enabled
+	*
+	*
+	* @return array
+	*/
+	public function listExperimental(){
+
+		$resp = array();
+
+		foreach ($this->experimentalFeatures as $feature){
+			$resp[$feature] = (isset($this->featuretoggle[$feature]))? 1 : 0;
+		}
+
+		return $resp;
+	}
 
 }
