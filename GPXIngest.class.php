@@ -484,6 +484,9 @@ class GPXIngest{
 		// Add a version number so the object can be used to identify which stats will/won't be present
 		$this->journey->metadata->GPXIngestVersion = $this->ingest_version;
 
+		// Add a list of the supported experimental features and whether they were enabled
+		$this->journey->metadata->experimentalFeatureState = $this->listExperimental();
+
 		$this->writeSuppressionMetadata();
 
 		// XML Ingest and conversion done!
