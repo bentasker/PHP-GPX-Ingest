@@ -339,7 +339,7 @@ class GPXIngest{
 					// Write the track data - take into account whether we've suppressed any data elements
 					if (!$this->suppresslocation){
 						$lat = (string) $trkpt['lat']; // let's only caste once
-						$lon = (string) $trkpt['lat'];
+						$lon = (string) $trkpt['lon'];
 
 						$this->journey->journeys->$jkey->segments->$segkey->points->$key->lat = $lat;
 						$this->journey->journeys->$jkey->segments->$segkey->points->$key->lon = $lon;
