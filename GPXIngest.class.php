@@ -223,6 +223,9 @@ class GPXIngest{
 
 		$this->journey->timezone = date_default_timezone_get();
 
+		// Create the GPXIngest Metadata object
+		$this->journey->metadata = new stdClass();
+	      $this->journey->metadata->AutoCalc = array('speed'=>false);
 	
 		$a = 0;
 
@@ -351,6 +354,8 @@ class GPXIngest{
 							    $speed_string = "$mph MPH";
 							    $ptspeed = (int)$mph;
 						      }
+						      // Make sure the metadata shows we did this calculation
+						      $this->journey->metadata->AutoCalc['speed'] = true;
 						}
 
 
@@ -508,7 +513,6 @@ class GPXIngest{
 		}
 
 		// Add any relevant metadata
-		$this->journey->metadata = new stdClass();
 		$this->journey->metadata->smartTrackStatus = ($this->smartTrackStatus())? 'enabled' : 'disabled';
 		$this->journey->metadata->smartTrackThreshold = $this->smartTrackThreshold();
 		$this->journey->metadata->suppression = array();
