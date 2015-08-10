@@ -216,6 +216,8 @@ class GPXIngest{
 		$this->journey->created->creator = (string) $this->xml['creator'];
 		$this->journey->created->version = (string) $this->xml['version'];
 		$this->journey->created->format = 'GPX';
+		$this->journey->created->namespaces = $this->xml->getNamespaces(true);
+
 
 		if (!$this->suppressdate && isset($this->xml->time)){
 			$this->journey->created->time = strtotime($this->xml->time);
@@ -321,6 +323,22 @@ class GPXIngest{
 					}
 
 					$this->journey->journeys->$jkey->segments->$segkey->points->$key = new stdClass();
+
+					// Handle Extensions (GPXIN-20)
+					$this->journey->journeys->$jkey->segments->$segkey->points->$key->extensions = new stdClass();
+
+					if (isset($trkpt->extensions)){
+					      foreach ($this->journey->created->namespaces as $ns=>$nsuri){
+						    if (empty($ns)){
+							continue;
+						    }
+						    $ext = array();
+						    foreach ($trkpt->extensions->children($nsuri) as $t){
+							  $ext[$t->getName()] = (string)$t;
+						    }
+						    $this->journey->journeys->$jkey->segments->$segkey->points->$key->extensions->$ns = $ext;
+					      }
+					}
 
 					// Calculate the period to which this trackpoint relates
 					if ($this->lasttimestamp){
