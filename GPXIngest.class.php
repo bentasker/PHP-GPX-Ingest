@@ -225,7 +225,7 @@ class GPXIngest{
 
 		// Create the GPXIngest Metadata object
 		$this->journey->metadata = new stdClass();
-	      $this->journey->metadata->AutoCalc = array('speed'=>false);
+	        $this->journey->metadata->AutoCalc = array('speed'=>false);
 	
 		$a = 0;
 
