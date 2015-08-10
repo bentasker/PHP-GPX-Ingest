@@ -271,7 +271,9 @@ class GPXIngest{
 					$ptspeed = (int)filter_var($trkpt->desc, FILTER_SANITIZE_NUMBER_INT);
 					$speed_string = (string) $trkpt->desc;
 
-					if (!$trkpt->desc){
+					// If speed is not available (and we're not calculating anything which can be used) suppress speed
+					// Will need updating in GPXIN-20
+					if (!$trkpt->desc && !$this->expisenabled('calcDistance')){
 					  $this->suppress('speed'); // Prevent warnings if speed is not available - See GPXIN-16
 					}
 
@@ -315,25 +317,12 @@ class GPXIngest{
 					}
 
 					$this->journey->journeys->$jkey->segments->$segkey->points->$key = new stdClass();
+
 					// Calculate the period to which this trackpoint relates
 					if ($this->lasttimestamp){
 						$this->entryperiod = $time - $this->lasttimestamp;
-
-						// Calculate time moving/stationary etc
-						if ($this->lastspeed){
-
-							if ($ptspeed > 0){
-								$timemoving = $timemoving + $this->entryperiod;
-							}else{
-								$timestationary = $timestationary + $this->entryperiod;
-							}
-
-						}
-
 					}
-
-
-		
+	
 
 
 					// Write the track data - take into account whether we've suppressed any data elements
@@ -347,6 +336,24 @@ class GPXIngest{
 						/** Implemented in GPXIN-6 - currently experimental so will generally be 0 */
 						$dist = ($this->lastpos)? $this->calculateTravelledDistance($this->lastpos,array($lat,$lon)) : 0;
 
+						// Added for GPXIN-13
+						if (!$trkpt->desc || empty($speed_string)){
+						      // Calculate the speed based on distance travelled and time
+						      // distance is in feet
+
+						      // Avoid div by 0
+						      if ($this->entryperiod == 0){
+							    $speed_string = "0 MPH";
+							    $ptspeed = 0;
+						      }else{						    
+							    $fps = $dist / $this->entryperiod; // Feet per second
+							    $mph = round(($fps * 0.681818),0);
+							    $speed_string = "$mph MPH";
+							    $ptspeed = $mph;
+						      }
+						}
+
+
 						$this->lastpos = array($lat,$lon); // update the reference array
 
 						// Update the stats arrays
@@ -354,6 +361,22 @@ class GPXIngest{
 						$this->sdist[] = $dist;
 						$this->jdist[] = $dist;
 					}
+
+
+					if ($this->lasttimestamp){
+						// Calculate time moving/stationary etc
+						if ($this->lastspeed){
+
+							if ($ptspeed > 0){
+								$timemoving = $timemoving + $this->entryperiod;
+							}else{
+								$timestationary = $timestationary + $this->entryperiod;
+							}
+
+						}
+
+					}
+
 
 					if (!$this->suppresselevation){
 						$ele = (string) $trkpt->ele;
