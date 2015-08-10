@@ -349,7 +349,7 @@ class GPXIngest{
 							    $fps = $dist / $this->entryperiod; // Feet per second
 							    $mph = round(($fps * 0.681818),0);
 							    $speed_string = "$mph MPH";
-							    $ptspeed = $mph;
+							    $ptspeed = (int)$mph;
 						      }
 						}
 
