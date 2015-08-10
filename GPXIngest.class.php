@@ -1007,6 +1007,15 @@ class GPXIngest{
 	}
 
 
+	/** Get the XML Namespaces that were defined in the source GPX file
+	*
+	* @return string
+	*
+	*/
+	public function getGPXNameSpaces(){
+		return $this->journey->created->namespaces;
+	}
+
 
 
 	/**                  ----    Statistics retrieval  ----                      */
