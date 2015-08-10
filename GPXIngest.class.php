@@ -286,7 +286,8 @@ class GPXIngest{
 					if ($this->smarttrack && $this->lasttimestamp && ($this->entryperiod > $this->smarttrackthreshold)){
 
 						// We need to start a new track, but first we have to finalise the stats
-						$this->writeSegmentStats($jkey,$segkey,$times,$x);
+						// We use unit, timemoving and stationary from the previous iteration
+						$this->writeSegmentStats($jkey,$segkey,$times,$x,$unit,$timemoving,$timestationary);
 						$this->writeTrackStats($jkey);
 						
 						// Reset the segment counter
