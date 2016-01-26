@@ -861,14 +861,14 @@ class GPXIngest{
 		  return 0;
 	  }
 
-	  // Array mapping (for ease of reference
-	  // lon1 - old[0]
-          // lon2 - new[0]
-          // lat1 - old[1]
-          // lat2 - new [1]
+	  // Array mapping (for ease of reference)
+          // lat1 - old[0]
+          // lat2 - new[0]
+	  // lon1 - old[1]
+          // lon2 - new[1]
 
-	  $theta = $old[0] - $new[0];
-	  $dist = acos(sin(deg2rad($old[1])) * sin(deg2rad($new[1])) +  cos(deg2rad($old[1])) * cos(deg2rad($new[1])) * cos(deg2rad($theta)));
+	  $theta = $old[1] - $new[1];
+	  $dist = acos(sin(deg2rad($old[0])) * sin(deg2rad($new[0])) + cos(deg2rad($old[0])) * cos(deg2rad($new[0])) * cos(deg2rad($theta)));
 	  $dist = rad2deg($dist);
 
 	  $res = round(($dist * 60 * 1.1515) * 5280,3); // Convert to feet and round to 3 decimal places
