@@ -229,7 +229,7 @@ class GPXIngest{
 		$this->journey->metadata = new stdClass();
 	        $this->journey->metadata->AutoCalc = array('speed'=>false);
 	
-		$a = 0;
+		$trackcounter = 0;
 
 		// There may be multiple tracks in one file
 		foreach ($this->xml->trk as $trk){
@@ -296,7 +296,7 @@ class GPXIngest{
 						$b=0;
 
 						// Update the track counter
-						$a++;
+						$trackcounter++;
 
 						// Reset the Key
 						$x=0;
@@ -304,8 +304,8 @@ class GPXIngest{
 						$times = array();
 
 						// Get a new track key
-						$jkey = $this->genTrackKey($a);
-						$this->initTrack($jkey,$trk->name.$a);
+						$jkey = $this->genTrackKey($trackcounter);
+						$this->initTrack($jkey,$trk->name.$trackcounter);
 
 
 						// Get a new segment key
@@ -493,7 +493,7 @@ class GPXIngest{
 
 
 			$this->writeTrackStats($jkey);
-			$a++; # Increment the track counter
+			$trackcounter++; # Increment the track counter
 
 		}
 
