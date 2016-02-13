@@ -493,6 +493,7 @@ class GPXIngest{
 
 
 			$this->writeTrackStats($jkey);
+			$a++; # Increment the track counter
 
 		}
 
