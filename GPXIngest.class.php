@@ -240,7 +240,7 @@ class GPXIngest{
 
 			// Set the object key
 			//$jkey = "journey$a";
-			$jkey = $this->genTrackKey($a);
+			$jkey = $this->genTrackKey($trackcounter);
 			$this->initTrack($jkey,$trk->name);
 
 
