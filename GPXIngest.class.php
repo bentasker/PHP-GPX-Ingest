@@ -1131,9 +1131,38 @@ class GPXIngest{
 	}
 
 
+	/** Get any waypoints which were ingested (GPXIN-24)
+	*
+	* @return array
+	*
+	*/
+	public function getWaypoints(){
+		return $this->journey->related->waypoints->points;
+	}
+
+	/** Get a waypoint which were ingested (GPXIN-24)
+	*
+	* @arg INT - Key of the requested waypoing
+	*
+	* @return stdClass
+	*
+	*/
+	public function getWaypoint((int)$id){
+		return $this->journey->related->waypoints->points[$id];
+	}
 
 	/**                  ----    Statistics retrieval  ----                      */
 
+
+	/** Get a count of the recorded way points
+	*
+	*
+	* @return INT
+	*
+	*/
+	public function getWayPointCount(){
+		return $this->journey->metadata->waypoints;
+	}
 
 
 
