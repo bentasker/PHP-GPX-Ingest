@@ -51,8 +51,9 @@ class GPXIngest{
 	*/
 	function __construct(){
 		$this->journey = new stdClass();
-		$this->waypoints = new stdClass();
-		$this->waypoints->points = array();
+		$this->journey->related = new stdClass();
+		$this->journey->related->waypoints = new stdClass();
+		$this->journey->related->waypoints->points = array();
 	}
 
 
@@ -608,8 +609,7 @@ class GPXIngest{
 			$waypoint->meta->GPS->dgpsid = ($wpt->dgpsid)? (string)$wpt->dgpsid : null;
 
 			// Extension support will come later
-
-			$this->waypoints->points[] = $waypoint;
+			$this->journey->related->waypoints->points[] = $waypoint;
 		}
 
 
