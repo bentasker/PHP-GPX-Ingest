@@ -32,6 +32,10 @@ class GPXIngest{
 	private $suppressdate = false;
 	private $lastspeed = false;
 	private $lastspeedm = false;
+	private $journeylats;
+	private $journeylons;
+	private $segmentlats;
+	private $segmentlons;
 	private $ingest_version = 1.02;
 	private $entryperiod = 0;
 	private $experimentalFeatures = array('calcDistance'); // See GPXIN-17
@@ -199,6 +203,17 @@ class GPXIngest{
 		$this->journey->stats->timeDecelerating = 0;
 		$this->journey->stats->distanceTravelled = 0;
 
+		// Bounds introduced in GPXIN-26
+		$this->journey->stats->bounds = new stdClass();
+		$this->journey->stats->bounds->Lat = new stdClass();
+		$this->journey->stats->bounds->Lat->min = 0;
+		$this->journey->stats->bounds->Lat->max = 0;
+		$this->journey->stats->bounds->Lon = new stdClass();
+		$this->journey->stats->bounds->Lon->min = 0;
+		$this->journey->stats->bounds->Lon->max = 0;
+
+
+
 		// Initialise the stats array
 		$this->totaltimes = array();
 		$this->highspeeds = array();
@@ -209,6 +224,12 @@ class GPXIngest{
 		$this->jeles = array();
 		$this->jeledevs = array();
 		$this->jdist = array(); //GPXIN-6
+        	$this->journeylats = array(); //GPXIN-26
+        	$this->journeylons = array(); //GPXIN-26
+        	$this->segmentlats = array(); //GPXIN-26
+        	$this->segmentlons = array(); //GPXIN-26
+
+
 		$unit = null;
 		
 
@@ -384,6 +405,13 @@ class GPXIngest{
 						$this->fdist[] = $dist;
 						$this->sdist[] = $dist;
 						$this->jdist[] = $dist;
+
+						// Update the arrays used for bounds calculations
+						$this->journeylats[] = $lat;
+						$this->journeylons[] = $lon;
+						$this->segmentlats[] = $lat;
+						$this->segmentlons[] = $lon;
+
 					}
 
 
@@ -530,6 +558,12 @@ class GPXIngest{
 
 		if (!$this->suppresslocation){
 			$this->journey->stats->distanceTravelled = array_sum($this->jdist); // See GPXIN-6
+
+			// Update the Lat/Lon bounds. See GPXIN-26
+			$this->journey->stats->bounds->Lat->min = min($this->journeylats);
+			$this->journey->stats->bounds->Lat->max = max($this->journeylats);
+			$this->journey->stats->bounds->Lon->min = min($this->journeylons);
+			$this->journey->stats->bounds->Lon->max = max($this->journeylons);
 		}
 
 		// Add any relevant metadata
@@ -672,6 +706,10 @@ class GPXIngest{
 		$this->lasttimestamp = false;
 		$this->lastpos = false;
 		$this->entryperiod = 0;
+
+
+                $this->segmentlats = array();
+                $this->segmentlons = array();
 	}
 
 
@@ -702,6 +740,14 @@ class GPXIngest{
 		$this->journey->journeys->$jkey->stats->timeAccelerating = 0;
 		$this->journey->journeys->$jkey->stats->timeDecelerating = 0;
 		$this->journey->journeys->$jkey->stats->distanceTravelled = 0;
+
+                $this->journey->journeys->$jkey->stats->bounds = new stdClass();
+                $this->journey->journeys->$jkey->stats->bounds->Lat = new stdClass();
+                $this->journey->journeys->$jkey->stats->bounds->Lat->min = 0;
+                $this->journey->journeys->$jkey->stats->bounds->Lat->max = 0;
+                $this->journey->journeys->$jkey->stats->bounds->Lon = new stdClass();
+                $this->journey->journeys->$jkey->stats->bounds->Lon->min = 0;
+                $this->journey->journeys->$jkey->stats->bounds->Lon->max = 0;
 
 		$this->tracks[$jkey]['name'] = $this->journey->journeys->$jkey->name;
 		$this->tracks[$jkey]['segments'] = array();
@@ -735,6 +781,13 @@ class GPXIngest{
 		// Calculate the total distance travelled (feet)
 		if (!$this->suppresslocation){
 			$this->journey->journeys->$jkey->segments->$segkey->stats->distanceTravelled = array_sum($this->sdist);
+                        $this->journey->journeys->$jkey->segments->$segkey->stats->bounds = new stdClass(); //GPXIN-26
+                        $this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lat = new stdClass(); 
+                        $this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lon = new stdClass();
+			$this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lat->min = min($this->segmentlats);
+			$this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lat->max = max($this->segmentlats);
+			$this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lon->min = min($this->segmentlons);
+			$this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lon->max = max($this->segmentlons);
 		}
 
 
