@@ -36,6 +36,8 @@ class GPXIngest{
 	private $journeylons;
 	private $segmentlats;
 	private $segmentlons;
+	private $tracklats;
+	private $tracklons;
 	private $ingest_version = 1.02;
 	private $entryperiod = 0;
 	private $experimentalFeatures = array('calcDistance'); // See GPXIN-17
@@ -226,9 +228,6 @@ class GPXIngest{
 		$this->jdist = array(); //GPXIN-6
         	$this->journeylats = array(); //GPXIN-26
         	$this->journeylons = array(); //GPXIN-26
-        	$this->segmentlats = array(); //GPXIN-26
-        	$this->segmentlons = array(); //GPXIN-26
-
 
 		$unit = null;
 		
@@ -411,6 +410,8 @@ class GPXIngest{
 						$this->journeylons[] = $lon;
 						$this->segmentlats[] = $lat;
 						$this->segmentlons[] = $lon;
+						$this->tracklats[] = $lat;
+						$this->tracklons[] = $lon;
 
 					}
 
@@ -754,6 +755,9 @@ class GPXIngest{
 
 		// Used by the Acceleration calculation method
 		$this->lasttimestamp = false;
+
+        	$this->tracklats = array(); //GPXIN-26
+        	$this->tracklons = array(); //GPXIN-26
 	}
 
 
@@ -872,6 +876,14 @@ class GPXIngest{
 
 		if (!$this->suppresslocation){
 			$this->journey->journeys->$jkey->stats->distanceTravelled = array_sum($this->fdist);
+
+                        $this->journey->journeys->$jkey->stats->bounds = new stdClass(); //GPXIN-26
+                        $this->journey->journeys->$jkey->stats->bounds->Lat = new stdClass(); 
+                        $this->journey->journeys->$jkey->stats->bounds->Lon = new stdClass();
+			$this->journey->journeys->$jkey->stats->bounds->Lat->min = min($this->tracklats);
+			$this->journey->journeys->$jkey->stats->bounds->Lat->max = max($this->tracklats);
+			$this->journey->journeys->$jkey->stats->bounds->Lon->min = min($this->tracklons);
+			$this->journey->journeys->$jkey->stats->bounds->Lon->max = max($this->tracklons);
 		}
 
 		if (!$this->suppressdate){
@@ -943,6 +955,8 @@ class GPXIngest{
 		$this->feles = array();
 		$this->feledevs = array();
 		$this->fdist = array();
+		$this->tracklats = array();
+		$this->tracklons = array();
 	}
 
 
