@@ -42,6 +42,7 @@ class GPXIngest{
 	private $entryperiod = 0;
 	private $experimentalFeatures = array('calcDistance'); // See GPXIN-17
 	private $featuretoggle = array();
+	private $waypoints;
 
 
 
@@ -50,6 +51,8 @@ class GPXIngest{
 	*/
 	function __construct(){
 		$this->journey = new stdClass();
+		$this->waypoints = new stdClass();
+		$this->waypoints->points = array();
 	}
 
 
@@ -248,7 +251,7 @@ class GPXIngest{
 		// Create the GPXIngest Metadata object
 		$this->journey->metadata = new stdClass();
 	        $this->journey->metadata->AutoCalc = array('speed'=>false);
-	
+		$this->journey->metadata->waypoints = 0; //GPXIN-24
 		$trackcounter = 0;
 
 		// There may be multiple tracks in one file
@@ -566,6 +569,49 @@ class GPXIngest{
 			$this->journey->stats->bounds->Lon->min = min($this->journeylons);
 			$this->journey->stats->bounds->Lon->max = max($this->journeylons);
 		}
+
+		// Waypoint support - added in GPXIN-24
+		foreach ($this->xml->wpt as $wpt){
+			// Increment the counter
+			$this->journey->metadata->waypoints++;
+
+			$waypoint = new stdClass();
+			$waypoint->name = ($wpt->name)? (string) $wpt->name : null; 
+			$waypoint->description = ($wpt->desc)? (string) $wpt->desc : null;
+			$waypoint->comment = ($wpt->cmt)? (string) $wpt->cmt : null;
+
+
+			// Add the positioning information
+			$waypoint->position = new stdClass();
+			$waypoint->position->lat = ($wpt['lat'])? (string) $wpt['lat'] : null; 
+			$waypoint->position->lon = ($wpt['lon'])? (string) $wpt['lon'] : null;
+			$waypoint->position->ele = ($wpt->ele)? (string) $wpt->ele : null;
+			$waypoint->position->geoidheight = ($wpt->geoidheight)? (string) $wpt->geoidheight : null;
+
+			// Add meta information about the waypoint
+			$waypoint->meta = new stdClass();
+			$waypoint->meta->time = ($wpt->time)? strtotime($wpt->time) : null;
+			$waypoint->meta->magvar = ($wpt->magvar)? (string) $wpt->magvar : null;
+			$waypoint->meta->source = ($wpt->src)? (string) $wpt->src : null;
+			$waypoint->meta->link = ($wpt->link)? (string) $wpt->link : null;
+			$waypoint->meta->symbol = ($wpt->sym)? (string) $wpt->sym : null;
+			$waypoint->meta->type = ($wpt->type)? (string) $wpt->type : null;
+
+			// Add the GPS related metadata
+			$waypoint->meta->GPS = new stdClass();
+			$waypoint->meta->GPS->fix = ($wpt->fix)? (string) $wpt->fix : null;
+			$waypoint->meta->GPS->sat = ($wpt->sat)? (int)$wpt->sat : null;
+			$waypoint->meta->GPS->hdop = ($wpt->hdop)? (string)$wpt->hdop : null;
+			$waypoint->meta->GPS->vdop = ($wpt->vdop)? (string)$wpt->vdop : null;
+			$waypoint->meta->GPS->pdop = ($wpt->pdop)? (string)$wpt->pdop : null;
+			$waypoint->meta->GPS->ageofdgpsdata = ($wpt->pdop)? (string)$wpt->ageofdgpsdata : null;
+			$waypoint->meta->GPS->dgpsid = ($wpt->dgpsid)? (string)$wpt->dgpsid : null;
+
+			// Extension support will come later
+
+			$this->waypoints->points[] = $waypoint;
+		}
+
 
 		// Add any relevant metadata
 		$this->journey->metadata->smartTrackStatus = ($this->smartTrackStatus())? 'enabled' : 'disabled';
