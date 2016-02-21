@@ -944,13 +944,25 @@ class GPXIngest{
 			$this->journey->journeys->$jkey->stats->modalSpeed = array_search(max($modesearch), $modesearch);
 			$this->journey->journeys->$jkey->stats->avgspeed = round($sumspeed/$ptcount,2);	
 
-			$this->journey->journeys->$jkey->stats->maxacceleration = max($this->faccel);
-			$this->journey->journeys->$jkey->stats->maxdeceleration = max($this->fdecel);
-			$this->journey->journeys->$jkey->stats->minacceleration = min($this->faccel);
-			$this->journey->journeys->$jkey->stats->mindeceleration = min($this->fdecel);
+			// Prevent warnings if empty - GPXIN-28
+			$sanitycheck='';
+			if (count($this->faccel) > 0){
+				$this->journey->journeys->$jkey->stats->maxacceleration = max($this->faccel);
+				$this->journey->journeys->$jkey->stats->minacceleration = min($this->faccel);
+				$sanitycheck="1";
+			}
 
-			$this->journey->journeys->$jkey->stats->avgacceleration = round(array_sum($this->faccel)/count($this->faccel),2);
-			$this->journey->journeys->$jkey->stats->avgdeceleration = round(array_sum($this->fdecel)/count($this->fdecel),2);
+			if (count($this->fdecel) > 0){
+				$this->journey->journeys->$jkey->stats->maxdeceleration = max($this->fdecel);
+				$this->journey->journeys->$jkey->stats->mindeceleration = min($this->fdecel);
+				$sanitycheck.="1";
+			}
+
+			// Prevent div by 0
+			if ($sanitycheck == "11"){
+				$this->journey->journeys->$jkey->stats->avgacceleration = round(array_sum($this->faccel)/count($this->faccel),2);
+				$this->journey->journeys->$jkey->stats->avgdeceleration = round(array_sum($this->fdecel)/count($this->fdecel),2);
+			}
 
 			// Add the calculated max/min speeds to the Journey wide stats
 			$this->highspeeds[] = $this->journey->journeys->$jkey->stats->maxSpeed;
