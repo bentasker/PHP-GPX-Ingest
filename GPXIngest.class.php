@@ -1103,6 +1103,32 @@ class GPXIngest{
 	}
 
 
+	/** Get ID's and names of any ingested routes
+	*
+	* @return array
+	*
+	*/
+	public function getRouteNames(){
+		$routes = array();
+
+		foreach ($this->journey->related->routes as $k => $v){
+			$routes[] = array('id'=>$k,'name'=>$v['name']);
+		}
+
+		return $routes;
+	}
+
+
+	/** Get a route based on it's ID
+	*
+	* @return stdClass
+	*
+	*/
+	public function getRouteByID($id){
+		return $this->journey->related->routes->$id;
+	}
+
+
 	/** Get details of segments for a given track
 	*
 	* @arg track - the track ID
@@ -1201,6 +1227,16 @@ class GPXIngest{
 		return $this->journey->metadata->waypoints;
 	}
 
+
+	/** Get a count of the recorded routes
+	*
+	*
+	* @return INT
+	*
+	*/
+	public function getRouteCount(){
+		return $this->journey->metadata->routes;
+	}
 
 
 	/** Get a count of the recorded track points for a given session
