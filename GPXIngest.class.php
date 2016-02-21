@@ -575,41 +575,7 @@ class GPXIngest{
 		foreach ($this->xml->wpt as $wpt){
 			// Increment the counter
 			$this->journey->metadata->waypoints++;
-
-			$waypoint = new stdClass();
-			$waypoint->name = ($wpt->name)? (string) $wpt->name : null; 
-			$waypoint->description = ($wpt->desc)? (string) $wpt->desc : null;
-			$waypoint->comment = ($wpt->cmt)? (string) $wpt->cmt : null;
-
-
-			// Add the positioning information
-			$waypoint->position = new stdClass();
-			$waypoint->position->lat = ($wpt['lat'])? (string) $wpt['lat'] : null; 
-			$waypoint->position->lon = ($wpt['lon'])? (string) $wpt['lon'] : null;
-			$waypoint->position->ele = ($wpt->ele)? (string) $wpt->ele : null;
-			$waypoint->position->geoidheight = ($wpt->geoidheight)? (string) $wpt->geoidheight : null;
-
-			// Add meta information about the waypoint
-			$waypoint->meta = new stdClass();
-			$waypoint->meta->time = ($wpt->time)? strtotime($wpt->time) : null;
-			$waypoint->meta->magvar = ($wpt->magvar)? (string) $wpt->magvar : null;
-			$waypoint->meta->source = ($wpt->src)? (string) $wpt->src : null;
-			$waypoint->meta->link = ($wpt->link)? (string) $wpt->link : null;
-			$waypoint->meta->symbol = ($wpt->sym)? (string) $wpt->sym : null;
-			$waypoint->meta->type = ($wpt->type)? (string) $wpt->type : null;
-
-			// Add the GPS related metadata
-			$waypoint->meta->GPS = new stdClass();
-			$waypoint->meta->GPS->fix = ($wpt->fix)? (string) $wpt->fix : null;
-			$waypoint->meta->GPS->sat = ($wpt->sat)? (int)$wpt->sat : null;
-			$waypoint->meta->GPS->hdop = ($wpt->hdop)? (string)$wpt->hdop : null;
-			$waypoint->meta->GPS->vdop = ($wpt->vdop)? (string)$wpt->vdop : null;
-			$waypoint->meta->GPS->pdop = ($wpt->pdop)? (string)$wpt->pdop : null;
-			$waypoint->meta->GPS->ageofdgpsdata = ($wpt->pdop)? (string)$wpt->ageofdgpsdata : null;
-			$waypoint->meta->GPS->dgpsid = ($wpt->dgpsid)? (string)$wpt->dgpsid : null;
-
-			// Extension support will come later
-			$this->journey->related->waypoints->points[] = $waypoint;
+			$this->journey->related->waypoints->points[] = $this->buildWptType($wpt);
 		}
 
 
@@ -628,6 +594,51 @@ class GPXIngest{
 		// XML Ingest and conversion done!
 	}
 
+
+	/** Builds a stdClass based around the GPX spec's wptType
+	*
+	* Despite the name, this type is used for route points as well as waypoints
+	*
+	* @arg - route/waypoint extracted from XML
+	*
+	* @return stdclass
+	*/
+	private function buildWptType($wpt){
+		$waypoint = new stdClass();
+		$waypoint->name = ($wpt->name)? (string) $wpt->name : null; 
+		$waypoint->description = ($wpt->desc)? (string) $wpt->desc : null;
+		$waypoint->comment = ($wpt->cmt)? (string) $wpt->cmt : null;
+
+
+		// Add the positioning information
+		$waypoint->position = new stdClass();
+		$waypoint->position->lat = ($wpt['lat'])? (string) $wpt['lat'] : null; 
+		$waypoint->position->lon = ($wpt['lon'])? (string) $wpt['lon'] : null;
+		$waypoint->position->ele = ($wpt->ele)? (string) $wpt->ele : null;
+		$waypoint->position->geoidheight = ($wpt->geoidheight)? (string) $wpt->geoidheight : null;
+
+		// Add meta information about the waypoint
+		$waypoint->meta = new stdClass();
+		$waypoint->meta->time = ($wpt->time)? strtotime($wpt->time) : null;
+		$waypoint->meta->magvar = ($wpt->magvar)? (string) $wpt->magvar : null;
+		$waypoint->meta->source = ($wpt->src)? (string) $wpt->src : null;
+		$waypoint->meta->link = ($wpt->link)? (string) $wpt->link : null;
+		$waypoint->meta->symbol = ($wpt->sym)? (string) $wpt->sym : null;
+		$waypoint->meta->type = ($wpt->type)? (string) $wpt->type : null;
+
+		// Add the GPS related metadata
+		$waypoint->meta->GPS = new stdClass();
+		$waypoint->meta->GPS->fix = ($wpt->fix)? (string) $wpt->fix : null;
+		$waypoint->meta->GPS->sat = ($wpt->sat)? (int)$wpt->sat : null;
+		$waypoint->meta->GPS->hdop = ($wpt->hdop)? (string)$wpt->hdop : null;
+		$waypoint->meta->GPS->vdop = ($wpt->vdop)? (string)$wpt->vdop : null;
+		$waypoint->meta->GPS->pdop = ($wpt->pdop)? (string)$wpt->pdop : null;
+		$waypoint->meta->GPS->ageofdgpsdata = ($wpt->pdop)? (string)$wpt->ageofdgpsdata : null;
+		$waypoint->meta->GPS->dgpsid = ($wpt->dgpsid)? (string)$wpt->dgpsid : null;
+
+		// Extension support will come later
+		return $waypoint;
+	}
 
 
 	/** Calculate the rate of (ac|de)celeration and update the relevant stats arrays. 
@@ -1147,7 +1158,7 @@ class GPXIngest{
 	* @return stdClass
 	*
 	*/
-	public function getWaypoint((int)$id){
+	public function getWaypoint($id){
 		return $this->journey->related->waypoints->points[$id];
 	}
 
