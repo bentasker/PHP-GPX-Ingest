@@ -1121,11 +1121,15 @@ class GPXIngest{
 
 	/** Get a route based on it's ID
 	*
-	* @return stdClass
+	* @return mixed
 	*
 	*/
 	public function getRouteByID($id){
-		return $this->journey->related->routes->$id;
+		if (isset($this->journey->related->routes->$id)){
+			return $this->journey->related->routes->$id;
+		}
+
+		return false;
 	}
 
 
