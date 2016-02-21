@@ -253,6 +253,7 @@ class GPXIngest{
 		$this->journey->metadata = new stdClass();
 	        $this->journey->metadata->AutoCalc = array('speed'=>false);
 		$this->journey->metadata->waypoints = 0; //GPXIN-24
+		$this->journey->metadata->routes = 0;
 		$trackcounter = 0;
 
 		// There may be multiple tracks in one file
@@ -578,6 +579,31 @@ class GPXIngest{
 			$this->journey->related->waypoints->points[] = $this->buildWptType($wpt);
 		}
 
+
+		// Route support - added in GPXIN-27
+		foreach ($this->xml->rte as $rte){
+			// Increment the counter
+			$rkey = "route".$this->journey->metadata->routes;
+			$this->journey->metadata->routes++;
+
+			$this->journey->related->routes->$rkey = new stdClass();
+			$this->journey->related->routes->$rkey->name = ($rte->name)? (string) $rte->name : $rkey;
+			$this->journey->related->routes->$rkey->meta = new stdClass();
+			$this->journey->related->routes->$rkey->meta->comment = ($rte->cmt)? (string) $rte->cmt : null;
+			$this->journey->related->routes->$rkey->meta->description = ($rte->desc)? (string) $rte->desc : null;
+			$this->journey->related->routes->$rkey->meta->src = ($rte->src)? (string) $rte->src : null;
+			$this->journey->related->routes->$rkey->meta->link = ($rte->link)? (string) $rte->link : null;
+			$this->journey->related->routes->$rkey->meta->number = ($rte->number)? (int) $rte->number : null;
+			$this->journey->related->routes->$rkey->meta->type = ($rte->type)? (string) $rte->type : null;
+			$this->journey->related->routes->$rkey->points = new stdClass();			
+
+			$key=0;
+			foreach ($rte->rtept as $rtpt){
+				$ptkey="rtpoint".$key;
+				$this->journey->related->routes->$rkey->points->$ptkey = $this->buildWptType($rtpt);
+				$key++;
+			}
+		}
 
 		// Add any relevant metadata
 		$this->journey->metadata->smartTrackStatus = ($this->smartTrackStatus())? 'enabled' : 'disabled';
