@@ -1112,7 +1112,7 @@ class GPXIngest{
 		$routes = array();
 
 		foreach ($this->journey->related->routes as $k => $v){
-			$routes[] = array('id'=>$k,'name'=>$v['name']);
+			$routes[] = array('id'=>$k,'name'=>$v->name);
 		}
 
 		return $routes;
