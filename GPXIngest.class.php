@@ -1123,6 +1123,10 @@ class GPXIngest{
 	public function getRouteNames(){
 		$routes = array();
 
+		if (!isset($this->journey->related->routes)){
+			return $routes;
+		}
+
 		foreach ($this->journey->related->routes as $k => $v){
 			$routes[] = array('id'=>$k,'name'=>$v->name);
 		}
