@@ -175,7 +175,7 @@ class GPXIngest{
 
 
 	/** Ingest the XML and convert into an object
-	* 
+	*
 	* Also updates our reference arrays
 	*
 	*/
@@ -234,7 +234,7 @@ class GPXIngest{
         	$this->journeylons = array(); //GPXIN-26
 
 		$unit = null;
-		
+
 
 		// Add the metadata
 		$this->journey->created->creator = (string) $this->xml['creator'];
@@ -291,7 +291,7 @@ class GPXIngest{
 
 				// Initialise the segment object
 				$this->initSegment($jkey,$segkey);
-				
+
 
 				// Trackpoint details in trk - Push them into our object
 				foreach ($trkseg->trkpt as $trkpt){
@@ -316,7 +316,7 @@ class GPXIngest{
 						// We use unit, timemoving and stationary from the previous iteration
 						$this->writeSegmentStats($jkey,$segkey,$times,$x,$unit,$timemoving,$timestationary);
 						$this->writeTrackStats($jkey);
-						
+
 						// Reset the segment counter
 						$b=0;
 
@@ -336,7 +336,7 @@ class GPXIngest{
 						// Get a new segment key
 						$segkey = $this->genSegKey($b);
 						$this->initSegment($jkey,$segkey);
-						
+
 						// Reset stats
 						$this->resetTrackStats();
 						$this->resetSegmentStats();
@@ -369,7 +369,7 @@ class GPXIngest{
 					if ($this->lasttimestamp){
 						$this->entryperiod = $time - $this->lasttimestamp;
 					}
-	
+
 
 
 					// Write the track data - take into account whether we've suppressed any data elements
@@ -392,7 +392,7 @@ class GPXIngest{
 						      if ($this->entryperiod == 0){
 							    $speed_string = "0 MPH";
 							    $ptspeed = 0;
-						      }else{						    
+						      }else{
 							    $fps = $dist / $this->entryperiod; // Feet per second
 							    $mph = round(($fps * 0.681818),0);
 							    $speed_string = "$mph MPH";
@@ -446,7 +446,7 @@ class GPXIngest{
 						}
 
 						$this->journey->journeys->$jkey->segments->$segkey->points->$key->elevationChange = $change;
-						
+
 						// Update the stats arrays - should be able to make this more efficient later
 						$this->jeles[] = $ele;
 						$this->seles[] = $ele;
@@ -455,9 +455,9 @@ class GPXIngest{
 						$this->jeledevs[] = $change;
 						$this->seledevs[] = $change;
 						$this->feledevs[] = $change;
-						
 
-						// Update the elevation for the next time round the block	
+
+						// Update the elevation for the next time round the block
 						$lastele = $ele;
 					}
 
@@ -502,7 +502,7 @@ class GPXIngest{
 						}
 
 						// If there's more than one unit per segment on the other hand, something's wrong!
-						
+
 
 
 					}else{
@@ -522,7 +522,7 @@ class GPXIngest{
 
 				$this->writeSegmentStats($jkey,$segkey,$times,$x,$unit,$timemoving,$timestationary);
 				$b++;
-				
+
 			}
 
 
@@ -532,7 +532,7 @@ class GPXIngest{
 		}
 
 		$modesearch = array_count_values($this->journeyspeeds);
-		
+
 
 		// Finalise the object stats - again take suppression into account
 
@@ -546,12 +546,24 @@ class GPXIngest{
 			$this->journey->stats->minSpeed = min($this->lowspeeds);
 			$this->journey->stats->modalSpeed = array_search(max($modesearch),$modesearch);
 			$this->journey->stats->avgspeed = round(array_sum($this->journeyspeeds) / $this->journey->stats->trackpoints,2);
-			$this->journey->stats->maxacceleration = max($this->accels);
-			$this->journey->stats->maxdeceleration = max($this->decels);
-			$this->journey->stats->minacceleration = min($this->accels);
-			$this->journey->stats->mindeceleration = min($this->decels);
-			$this->journey->stats->avgacceleration = round(array_sum($this->accels)/count($this->accels),2);
-			$this->journey->stats->avgdeceleration = round(array_sum($this->decels)/count($this->accels),2);
+			$this->journey->stats->maxacceleration = count($this->accels) > 0 ?
+				max($this->accels) :
+				0;
+			$this->journey->stats->maxdeceleration = count($this->decels) > 0 ?
+				max($this->decels) :
+				0;
+			$this->journey->stats->minacceleration = count($this->accels) > 0 ?
+				min($this->accels) :
+				0;
+			$this->journey->stats->mindeceleration = count($this->decels) > 0 ?
+				min($this->decels) :
+				0;
+			$this->journey->stats->avgacceleration = count($this->accels) > 0 ?
+				round(array_sum($this->accels)/count($this->accels),2) :
+				0;
+			$this->journey->stats->avgdeceleration = count($this->decels) > 0 ?
+				round(array_sum($this->decels)/count($this->decels),2) :
+				0;
 
 		}
 
@@ -595,7 +607,7 @@ class GPXIngest{
 			$this->journey->related->routes->$rkey->meta->link = ($rte->link)? (string) $rte->link : null;
 			$this->journey->related->routes->$rkey->meta->number = ($rte->number)? (int) $rte->number : null;
 			$this->journey->related->routes->$rkey->meta->type = ($rte->type)? (string) $rte->type : null;
-			$this->journey->related->routes->$rkey->points = new stdClass();			
+			$this->journey->related->routes->$rkey->points = new stdClass();
 
 			$key=0;
 			foreach ($rte->rtept as $rtpt){
@@ -631,14 +643,14 @@ class GPXIngest{
 	*/
 	private function buildWptType($wpt){
 		$waypoint = new stdClass();
-		$waypoint->name = ($wpt->name)? (string) $wpt->name : null; 
+		$waypoint->name = ($wpt->name)? (string) $wpt->name : null;
 		$waypoint->description = ($wpt->desc)? (string) $wpt->desc : null;
 		$waypoint->comment = ($wpt->cmt)? (string) $wpt->cmt : null;
 
 
 		// Add the positioning information
 		$waypoint->position = new stdClass();
-		$waypoint->position->lat = ($wpt['lat'])? (string) $wpt['lat'] : null; 
+		$waypoint->position->lat = ($wpt['lat'])? (string) $wpt['lat'] : null;
 		$waypoint->position->lon = ($wpt['lon'])? (string) $wpt['lon'] : null;
 		$waypoint->position->ele = ($wpt->ele)? (string) $wpt->ele : null;
 		$waypoint->position->geoidheight = ($wpt->geoidheight)? (string) $wpt->geoidheight : null;
@@ -667,7 +679,7 @@ class GPXIngest{
 	}
 
 
-	/** Calculate the rate of (ac|de)celeration and update the relevant stats arrays. 
+	/** Calculate the rate of (ac|de)celeration and update the relevant stats arrays.
 	* Also returns the values
 	*
 	* All returned values should be considered m/s^2 (i.e. the standard instrument)
@@ -682,7 +694,7 @@ class GPXIngest{
 	private function calculateAcceleration($speed,$timestamp,$unit){
 		$acceleration = 0;
 		$deceleration = 0;
-		
+
 		// We need to convert the speed into metres per sec
 
 
@@ -692,7 +704,7 @@ class GPXIngest{
 
 			$speed = ((int)filter_var($speed, FILTER_SANITIZE_NUMBER_INT)* 1000)/3600;
 		}else{
-			// MPH. 
+			// MPH.
 			// There are 1609.344 metres to a mile, suspect we may need some rounding done on this one
 			$speed = ((int)filter_var($speed, FILTER_SANITIZE_NUMBER_INT)* 1609.344)/3600;
 		}
@@ -712,7 +724,9 @@ class GPXIngest{
 
 
 		// We'll worry about whether it's accel or decel after doing the maths
-		$velocity_change = ($speed - $this->lastspeedm) / $this->entryperiod;
+		$velocity_change = $this->entryperiod > 0 ?
+			($speed - $this->lastspeedm) / $this->entryperiod :
+			0;
 
 		if ($velocity_change < 0){
 			// It's deceleration
@@ -731,8 +745,8 @@ class GPXIngest{
 			}
 		}
 
-		
-		
+
+
 
 
 		$this->lastspeedm = $speed;
@@ -855,7 +869,7 @@ class GPXIngest{
 		}
 
 		if (!$this->suppressspeed){
-			$modesearch = array_count_values($this->sspeed); 
+			$modesearch = array_count_values($this->sspeed);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->avgspeed = round($this->speed/$x,2);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->modalSpeed = array_search(max($modesearch), $modesearch);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->minSpeed = min($this->sspeed);
@@ -869,7 +883,7 @@ class GPXIngest{
 		if (!$this->suppresslocation){
 			$this->journey->journeys->$jkey->segments->$segkey->stats->distanceTravelled = array_sum($this->sdist);
                         $this->journey->journeys->$jkey->segments->$segkey->stats->bounds = new stdClass(); //GPXIN-26
-                        $this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lat = new stdClass(); 
+                        $this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lat = new stdClass();
                         $this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lon = new stdClass();
 			$this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lat->min = min($this->segmentlats);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lat->max = max($this->segmentlats);
@@ -937,12 +951,12 @@ class GPXIngest{
 
 		if (!$this->suppressspeed){
 			$sumspeed = array_sum($this->fspeed);
-			$modesearch = array_count_values($this->fspeed); 
+			$modesearch = array_count_values($this->fspeed);
 			$this->journeyspeeds = array_merge($this->journeyspeeds,$this->fspeed);
 			$this->journey->journeys->$jkey->stats->maxSpeed = max($this->fspeed);
-			$this->journey->journeys->$jkey->stats->minSpeed = min($this->fspeed);			
+			$this->journey->journeys->$jkey->stats->minSpeed = min($this->fspeed);
 			$this->journey->journeys->$jkey->stats->modalSpeed = array_search(max($modesearch), $modesearch);
-			$this->journey->journeys->$jkey->stats->avgspeed = round($sumspeed/$ptcount,2);	
+			$this->journey->journeys->$jkey->stats->avgspeed = round($sumspeed/$ptcount,2);
 
 			// Prevent warnings if empty - GPXIN-28
 			$sanitycheck='';
@@ -973,7 +987,7 @@ class GPXIngest{
 			$this->journey->journeys->$jkey->stats->distanceTravelled = array_sum($this->fdist);
 
                         $this->journey->journeys->$jkey->stats->bounds = new stdClass(); //GPXIN-26
-                        $this->journey->journeys->$jkey->stats->bounds->Lat = new stdClass(); 
+                        $this->journey->journeys->$jkey->stats->bounds->Lat = new stdClass();
                         $this->journey->journeys->$jkey->stats->bounds->Lon = new stdClass();
 			$this->journey->journeys->$jkey->stats->bounds->Lat->min = min($this->tracklats);
 			$this->journey->journeys->$jkey->stats->bounds->Lat->max = max($this->tracklats);
@@ -1272,7 +1286,7 @@ class GPXIngest{
 	}
 
 
-	/** Get the overall statistics 
+	/** Get the overall statistics
 	*
 	* @return object
 	*/
@@ -1321,7 +1335,7 @@ class GPXIngest{
 	}
 
 
-	
+
 
 	/** Get the Journey end time
 	*
