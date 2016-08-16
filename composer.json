@@ -1,0 +1,15 @@
+{
+  "name": "bentasker/php-gpx-ingest",
+  "type": "library",
+  "description": "PHP GPX-Ingest is a simple PHP class designed to ingest a basic Global Position eXchange (GPX) file and extract data/stats from the tracks within.",
+  "license": "GPL-2.0",
+  "authors": [
+	{
+	  "name": "Ben Tasker",
+	  "email": "webqueries@bentasker.co.uk"
+	}
+  ],
+  "autoload": {
+	"psr-0": { "GPXIngest": "src/" }
+  }
+}
