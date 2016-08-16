@@ -12,6 +12,8 @@
 * Where issue keys are included (GPXIN-[0-9]+), the relevant issue can be viewed at http://projects.bentasker.co.uk/jira_projects/browse/GPXIN.html
 */
 
+namespace GPXIngest;
+
 class GPXIngest{
 
 	private $file;
@@ -50,9 +52,9 @@ class GPXIngest{
 	*
 	*/
 	function __construct(){
-		$this->journey = new stdClass();
-		$this->journey->related = new stdClass();
-		$this->journey->related->waypoints = new stdClass();
+		$this->journey = new \stdClass();
+		$this->journey->related = new \stdClass();
+		$this->journey->related->waypoints = new \stdClass();
 		$this->journey->related->waypoints->points = array();
 	}
 
@@ -61,7 +63,7 @@ class GPXIngest{
 	*
 	*/
 	public function reset(){
-		$this->journey = new stdClass();
+		$this->journey = new \stdClass();
 		$this->tracks = array();
 	}
 
@@ -186,12 +188,12 @@ class GPXIngest{
 		}
 
 		if (!is_object($this->journey)){
-		      $this->journey = new stdClass();
+		      $this->journey = new \stdClass();
 		}
 
 		// Initialise the object
-		$this->journey->created = new stdClass();
-		$this->journey->stats = new stdClass();
+		$this->journey->created = new \stdClass();
+		$this->journey->stats = new \stdClass();
 		$this->journey->stats->trackpoints = 0;
 		$this->journey->stats->recordedDuration = 0;
 		$this->journey->stats->segments = 0;
@@ -210,11 +212,11 @@ class GPXIngest{
 		$this->journey->stats->distanceTravelled = 0;
 
 		// Bounds introduced in GPXIN-26
-		$this->journey->stats->bounds = new stdClass();
-		$this->journey->stats->bounds->Lat = new stdClass();
+		$this->journey->stats->bounds = new \stdClass();
+		$this->journey->stats->bounds->Lat = new \stdClass();
 		$this->journey->stats->bounds->Lat->min = 0;
 		$this->journey->stats->bounds->Lat->max = 0;
-		$this->journey->stats->bounds->Lon = new stdClass();
+		$this->journey->stats->bounds->Lon = new \stdClass();
 		$this->journey->stats->bounds->Lon->min = 0;
 		$this->journey->stats->bounds->Lon->max = 0;
 
@@ -250,7 +252,7 @@ class GPXIngest{
 		$this->journey->timezone = date_default_timezone_get();
 
 		// Create the GPXIngest Metadata object
-		$this->journey->metadata = new stdClass();
+		$this->journey->metadata = new \stdClass();
 	        $this->journey->metadata->AutoCalc = array('speed'=>false);
 		$this->journey->metadata->waypoints = 0; //GPXIN-24
 		$this->journey->metadata->routes = 0;
@@ -344,13 +346,13 @@ class GPXIngest{
 					}
 
 					if (!isset($this->journey->journeys->$jkey->segments->$segkey->points)){
-					      $this->journey->journeys->$jkey->segments->$segkey->points = new stdClass();
+					      $this->journey->journeys->$jkey->segments->$segkey->points = new \stdClass();
 					}
 
-					$this->journey->journeys->$jkey->segments->$segkey->points->$key = new stdClass();
+					$this->journey->journeys->$jkey->segments->$segkey->points->$key = new \stdClass();
 
 					// Handle Extensions (GPXIN-20)
-					$this->journey->journeys->$jkey->segments->$segkey->points->$key->extensions = new stdClass();
+					$this->journey->journeys->$jkey->segments->$segkey->points->$key->extensions = new \stdClass();
 
 					if (isset($trkpt->extensions)){
 					      foreach ($this->journey->created->namespaces as $ns=>$nsuri){
@@ -568,7 +570,7 @@ class GPXIngest{
 		}
 
 		if (!$this->suppresselevation){
-			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation = new stdClass();
+			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation = new \stdClass();
 			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->max = max($this->jeles);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->min = min($this->jeles);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->avgChange = round(array_sum($this->jeledevs)/count($this->jeledevs),2);
@@ -598,16 +600,16 @@ class GPXIngest{
 			$rkey = "route".$this->journey->metadata->routes;
 			$this->journey->metadata->routes++;
 
-			$this->journey->related->routes->$rkey = new stdClass();
+			$this->journey->related->routes->$rkey = new \stdClass();
 			$this->journey->related->routes->$rkey->name = ($rte->name)? (string) $rte->name : $rkey;
-			$this->journey->related->routes->$rkey->meta = new stdClass();
+			$this->journey->related->routes->$rkey->meta = new \stdClass();
 			$this->journey->related->routes->$rkey->meta->comment = ($rte->cmt)? (string) $rte->cmt : null;
 			$this->journey->related->routes->$rkey->meta->description = ($rte->desc)? (string) $rte->desc : null;
 			$this->journey->related->routes->$rkey->meta->src = ($rte->src)? (string) $rte->src : null;
 			$this->journey->related->routes->$rkey->meta->link = ($rte->link)? (string) $rte->link : null;
 			$this->journey->related->routes->$rkey->meta->number = ($rte->number)? (int) $rte->number : null;
 			$this->journey->related->routes->$rkey->meta->type = ($rte->type)? (string) $rte->type : null;
-			$this->journey->related->routes->$rkey->points = new stdClass();
+			$this->journey->related->routes->$rkey->points = new \stdClass();
 
 			$key=0;
 			foreach ($rte->rtept as $rtpt){
@@ -642,21 +644,21 @@ class GPXIngest{
 	* @return stdclass
 	*/
 	private function buildWptType($wpt){
-		$waypoint = new stdClass();
+		$waypoint = new \stdClass();
 		$waypoint->name = ($wpt->name)? (string) $wpt->name : null;
 		$waypoint->description = ($wpt->desc)? (string) $wpt->desc : null;
 		$waypoint->comment = ($wpt->cmt)? (string) $wpt->cmt : null;
 
 
 		// Add the positioning information
-		$waypoint->position = new stdClass();
+		$waypoint->position = new \stdClass();
 		$waypoint->position->lat = ($wpt['lat'])? (string) $wpt['lat'] : null;
 		$waypoint->position->lon = ($wpt['lon'])? (string) $wpt['lon'] : null;
 		$waypoint->position->ele = ($wpt->ele)? (string) $wpt->ele : null;
 		$waypoint->position->geoidheight = ($wpt->geoidheight)? (string) $wpt->geoidheight : null;
 
 		// Add meta information about the waypoint
-		$waypoint->meta = new stdClass();
+		$waypoint->meta = new \stdClass();
 		$waypoint->meta->time = ($wpt->time)? strtotime($wpt->time) : null;
 		$waypoint->meta->magvar = ($wpt->magvar)? (string) $wpt->magvar : null;
 		$waypoint->meta->source = ($wpt->src)? (string) $wpt->src : null;
@@ -665,7 +667,7 @@ class GPXIngest{
 		$waypoint->meta->type = ($wpt->type)? (string) $wpt->type : null;
 
 		// Add the GPS related metadata
-		$waypoint->meta->GPS = new stdClass();
+		$waypoint->meta->GPS = new \stdClass();
 		$waypoint->meta->GPS->fix = ($wpt->fix)? (string) $wpt->fix : null;
 		$waypoint->meta->GPS->sat = ($wpt->sat)? (int)$wpt->sat : null;
 		$waypoint->meta->GPS->hdop = ($wpt->hdop)? (string)$wpt->hdop : null;
@@ -800,7 +802,7 @@ class GPXIngest{
 	*
 	*/
 	private function initSegment($jkey,$segkey){
-		$this->journey->journeys->$jkey->segments->$segkey = new stdClass();
+		$this->journey->journeys->$jkey->segments->$segkey = new \stdClass();
 		$this->lasttimestamp = false;
 		$this->lastpos = false;
 		$this->entryperiod = 0;
@@ -818,12 +820,12 @@ class GPXIngest{
 	private function initTrack($jkey,$trk){
 
 		if (!isset($this->journey->journeys)){
-		    $this->journey->journeys = new stdClass();
+		    $this->journey->journeys = new \stdClass();
 		}
 
-		$this->journey->journeys->$jkey = new stdClass();
-		$this->journey->journeys->$jkey->segments = new stdClass();
-		$this->journey->journeys->$jkey->stats = new stdClass();
+		$this->journey->journeys->$jkey = new \stdClass();
+		$this->journey->journeys->$jkey->segments = new \stdClass();
+		$this->journey->journeys->$jkey->stats = new \stdClass();
 		$this->journey->journeys->$jkey->name = (string) $trk;
 		$this->journey->journeys->$jkey->stats->journeyDuration = 0;
 		$this->journey->journeys->$jkey->stats->maxacceleration = 0;
@@ -839,11 +841,11 @@ class GPXIngest{
 		$this->journey->journeys->$jkey->stats->timeDecelerating = 0;
 		$this->journey->journeys->$jkey->stats->distanceTravelled = 0;
 
-                $this->journey->journeys->$jkey->stats->bounds = new stdClass();
-                $this->journey->journeys->$jkey->stats->bounds->Lat = new stdClass();
+                $this->journey->journeys->$jkey->stats->bounds = new \stdClass();
+                $this->journey->journeys->$jkey->stats->bounds->Lat = new \stdClass();
                 $this->journey->journeys->$jkey->stats->bounds->Lat->min = 0;
                 $this->journey->journeys->$jkey->stats->bounds->Lat->max = 0;
-                $this->journey->journeys->$jkey->stats->bounds->Lon = new stdClass();
+                $this->journey->journeys->$jkey->stats->bounds->Lon = new \stdClass();
                 $this->journey->journeys->$jkey->stats->bounds->Lon->min = 0;
                 $this->journey->journeys->$jkey->stats->bounds->Lon->max = 0;
 
@@ -865,7 +867,7 @@ class GPXIngest{
 	private function writeSegmentStats($jkey,$segkey,$times,$x,$uom,$timemoving,$timestationary){
 
 		if (!isset($this->journey->journeys->$jkey->segments->$segkey->stats)){
-			$this->journey->journeys->$jkey->segments->$segkey->stats = new stdClass();
+			$this->journey->journeys->$jkey->segments->$segkey->stats = new \stdClass();
 		}
 
 		if (!$this->suppressspeed){
@@ -882,9 +884,9 @@ class GPXIngest{
 		// Calculate the total distance travelled (feet)
 		if (!$this->suppresslocation){
 			$this->journey->journeys->$jkey->segments->$segkey->stats->distanceTravelled = array_sum($this->sdist);
-                        $this->journey->journeys->$jkey->segments->$segkey->stats->bounds = new stdClass(); //GPXIN-26
-                        $this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lat = new stdClass();
-                        $this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lon = new stdClass();
+                        $this->journey->journeys->$jkey->segments->$segkey->stats->bounds = new \stdClass(); //GPXIN-26
+                        $this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lat = new \stdClass();
+                        $this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lon = new \stdClass();
 			$this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lat->min = min($this->segmentlats);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lat->max = max($this->segmentlats);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lon->min = min($this->segmentlons);
@@ -910,7 +912,7 @@ class GPXIngest{
 		}
 
 		if (!$this->suppresselevation){
-			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation = new stdClass();
+			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation = new \stdClass();
 			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->max = max($this->seles);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->min = min($this->seles);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->avgChange = round(array_sum($this->seledevs)/count($this->seledevs),2);
@@ -986,9 +988,9 @@ class GPXIngest{
 		if (!$this->suppresslocation){
 			$this->journey->journeys->$jkey->stats->distanceTravelled = array_sum($this->fdist);
 
-                        $this->journey->journeys->$jkey->stats->bounds = new stdClass(); //GPXIN-26
-                        $this->journey->journeys->$jkey->stats->bounds->Lat = new stdClass();
-                        $this->journey->journeys->$jkey->stats->bounds->Lon = new stdClass();
+                        $this->journey->journeys->$jkey->stats->bounds = new \stdClass(); //GPXIN-26
+                        $this->journey->journeys->$jkey->stats->bounds->Lat = new \stdClass();
+                        $this->journey->journeys->$jkey->stats->bounds->Lon = new \stdClass();
 			$this->journey->journeys->$jkey->stats->bounds->Lat->min = min($this->tracklats);
 			$this->journey->journeys->$jkey->stats->bounds->Lat->max = max($this->tracklats);
 			$this->journey->journeys->$jkey->stats->bounds->Lon->min = min($this->tracklons);
@@ -1009,7 +1011,7 @@ class GPXIngest{
 		}
 
 		if (!$this->suppresselevation){
-			$this->journey->journeys->$jkey->stats->elevation = new stdClass();
+			$this->journey->journeys->$jkey->stats->elevation = new \stdClass();
 			$this->journey->journeys->$jkey->stats->elevation->max = max($this->feles);
 			$this->journey->journeys->$jkey->stats->elevation->min = min($this->feles);
 			$this->journey->journeys->$jkey->stats->elevation->avgChange = round(array_sum($this->feledevs)/count($this->feledevs),2);
