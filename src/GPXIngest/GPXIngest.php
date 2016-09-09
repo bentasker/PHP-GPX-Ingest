@@ -42,7 +42,7 @@ class GPXIngest{
 	private $tracklons;
 	private $ingest_version = 1.02;
 	private $entryperiod = 0;
-	private $experimentalFeatures = array('calcDistance'); // See GPXIN-17
+	private $experimentalFeatures = array('calcDistance', 'calcElevationGain'); // See GPXIN-17
 	private $featuretoggle = array();
 	private $waypoints;
 
@@ -568,7 +568,6 @@ class GPXIngest{
 				0;
 
 		}
-
 		if (!$this->suppresselevation){
 			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation = new \stdClass();
 			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->max = max($this->jeles);
@@ -1015,6 +1014,7 @@ class GPXIngest{
 			$this->journey->journeys->$jkey->stats->elevation->max = max($this->feles);
 			$this->journey->journeys->$jkey->stats->elevation->min = min($this->feles);
 			$this->journey->journeys->$jkey->stats->elevation->avgChange = round(array_sum($this->feledevs)/count($this->feledevs),2);
+			$this->journey->journeys->$jkey->stats->elevation->gain = $this->calculateElevationGain($this->feles);
 		}
 
 
@@ -1554,4 +1554,26 @@ class GPXIngest{
 		return $resp;
 	}
 
+	/**
+	 * Calculate total elevation gain
+	 *
+	 * @param $elevationData Array with elevation data
+	 * @return float|int Total elevation gain in meters
+	 */
+	public function calculateElevationGain($elevationData) {
+
+	    if (!$this->expisenabled('calcElevationGain')){ // This functionality is currently considered experimental
+		    return 0;
+	    }
+
+		$gain = 0;
+		$prev = (float)$elevationData[0];
+		foreach ($elevationData as $elevation) {
+			if ( ($new = (float)$elevation) > $prev) {
+				$gain += $new - $prev;
+			}
+			$prev = $new;
+		}
+		return $gain;
+	}
 }
