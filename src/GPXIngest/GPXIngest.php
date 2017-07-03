@@ -56,6 +56,7 @@ class GPXIngest{
 		$this->journey->related = new \stdClass();
 		$this->journey->related->waypoints = new \stdClass();
 		$this->journey->related->waypoints->points = array();
+		$this->journey->related->routes = new \stdClass();
 	}
 
 
