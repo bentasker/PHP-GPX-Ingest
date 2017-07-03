@@ -534,58 +534,10 @@ class GPXIngest{
 
 		}
 
-		$modesearch = array_count_values($this->journeyspeeds);
+                // Finalise the object stats
+		$this->generateAggregatedTrackStats();
 
-
-		// Finalise the object stats - again take suppression into account
-
-		if (!$this->suppressdate){
-			$this->journey->stats->start = min($this->totaltimes);
-			$this->journey->stats->end = max($this->totaltimes);
-		}
-
-		if (!$this->suppressspeed){
-			$this->journey->stats->maxSpeed = max($this->highspeeds);
-			$this->journey->stats->minSpeed = min($this->lowspeeds);
-			$this->journey->stats->modalSpeed = array_search(max($modesearch),$modesearch);
-			$this->journey->stats->avgspeed = round(array_sum($this->journeyspeeds) / $this->journey->stats->trackpoints,2);
-			$this->journey->stats->maxacceleration = count($this->accels) > 0 ?
-				max($this->accels) :
-				0;
-			$this->journey->stats->maxdeceleration = count($this->decels) > 0 ?
-				max($this->decels) :
-				0;
-			$this->journey->stats->minacceleration = count($this->accels) > 0 ?
-				min($this->accels) :
-				0;
-			$this->journey->stats->mindeceleration = count($this->decels) > 0 ?
-				min($this->decels) :
-				0;
-			$this->journey->stats->avgacceleration = count($this->accels) > 0 ?
-				round(array_sum($this->accels)/count($this->accels),2) :
-				0;
-			$this->journey->stats->avgdeceleration = count($this->decels) > 0 ?
-				round(array_sum($this->decels)/count($this->decels),2) :
-				0;
-
-		}
-		if (!$this->suppresselevation){
-			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation = new \stdClass();
-			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->max = max($this->jeles);
-			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->min = min($this->jeles);
-			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->avgChange = round(array_sum($this->jeledevs)/count($this->jeledevs),2);
-		}
-
-		if (!$this->suppresslocation){
-			$this->journey->stats->distanceTravelled = array_sum($this->jdist); // See GPXIN-6
-
-			// Update the Lat/Lon bounds. See GPXIN-26
-			$this->journey->stats->bounds->Lat->min = min($this->journeylats);
-			$this->journey->stats->bounds->Lat->max = max($this->journeylats);
-			$this->journey->stats->bounds->Lon->min = min($this->journeylons);
-			$this->journey->stats->bounds->Lon->max = max($this->journeylons);
-		}
-
+		
 		// Waypoint support - added in GPXIN-24
 		foreach ($this->xml->wpt as $wpt){
 			// Increment the counter
@@ -635,6 +587,70 @@ class GPXIngest{
 	}
 
 
+	/** Generate statistics based on all the trackpoint data that's been gathered (if any)
+	*
+	* @return mixed
+	*/
+	private function generateAggregatedTrackStats(){
+		// Finalise the object stats - again take suppression into account
+
+		if (!isset($this->journey->journeys)){
+                    return False;
+		}
+				
+		if (!$this->suppressdate){
+			$this->journey->stats->start = min($this->totaltimes);
+			$this->journey->stats->end = max($this->totaltimes);
+		}
+
+		if (!$this->suppressspeed){
+                        $modesearch = array_count_values($this->journeyspeeds);
+			$this->journey->stats->maxSpeed = max($this->highspeeds);
+			$this->journey->stats->minSpeed = min($this->lowspeeds);
+			$this->journey->stats->modalSpeed = array_search(max($modesearch),$modesearch);
+			$this->journey->stats->avgspeed = round(array_sum($this->journeyspeeds) / $this->journey->stats->trackpoints,2);
+			$this->journey->stats->maxacceleration = count($this->accels) > 0 ?
+				max($this->accels) :
+				0;
+			$this->journey->stats->maxdeceleration = count($this->decels) > 0 ?
+				max($this->decels) :
+				0;
+			$this->journey->stats->minacceleration = count($this->accels) > 0 ?
+				min($this->accels) :
+				0;
+			$this->journey->stats->mindeceleration = count($this->decels) > 0 ?
+				min($this->decels) :
+				0;
+			$this->journey->stats->avgacceleration = count($this->accels) > 0 ?
+				round(array_sum($this->accels)/count($this->accels),2) :
+				0;
+			$this->journey->stats->avgdeceleration = count($this->decels) > 0 ?
+				round(array_sum($this->decels)/count($this->decels),2) :
+				0;
+
+		}
+		if (!$this->suppresselevation){
+			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation = new \stdClass();
+			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->max = max($this->jeles);
+			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->min = min($this->jeles);
+			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->avgChange = round(array_sum($this->jeledevs)/count($this->jeledevs),2);
+		}
+
+		if (!$this->suppresslocation){
+			$this->journey->stats->distanceTravelled = array_sum($this->jdist); // See GPXIN-6
+
+			// Update the Lat/Lon bounds. See GPXIN-26
+			$this->journey->stats->bounds->Lat->min = min($this->journeylats);
+			$this->journey->stats->bounds->Lat->max = max($this->journeylats);
+			$this->journey->stats->bounds->Lon->min = min($this->journeylons);
+			$this->journey->stats->bounds->Lon->max = max($this->journeylons);
+		}
+	}
+	
+	
+	
+	
+	
 	/** Builds a stdClass based around the GPX spec's wptType
 	*
 	* Despite the name, this type is used for route points as well as waypoints
