@@ -36,6 +36,8 @@ class GPXIngest{
 	private $suppresswptele = false;	
 	private $lastspeed = false;
 	private $lastspeedm = false;
+	private $lastrteele = false;
+	private $rteeledev = array();
 	private $journeylats;
 	private $journeylons;
 	private $segmentlats;
@@ -542,7 +544,8 @@ class GPXIngest{
 
 
 		// Route support - added in GPXIN-27
-		
+                $this->lastrteele = false;
+                $this->rteeledev = array();
 		$rtelats = array();
 		$rtelons = array();
 		$rteeles = array();
@@ -593,6 +596,10 @@ class GPXIngest{
                         $this->journey->stats->routestats->elevation = new \stdClass();
                         $this->journey->stats->routestats->elevation->min = min($rteeles);
                         $this->journey->stats->routestats->elevation->max = max($rteeles);
+                        $this->journey->stats->routestats->elevation->avgChange = round(array_sum($this->rteeledev)/count($this->rteeledev),2);
+                        $this->journey->stats->routestats->elevation->maxChange = max($this->rteeledev);
+                        $this->journey->stats->routestats->elevation->minChange = min($this->rteeledev);
+                        
 		}		
 		
 		
@@ -710,7 +717,19 @@ class GPXIngest{
 		$waypoint->position->lon = ($wpt['lon'] && !$this->suppresswptlocation)? (string) $wpt['lon'] : null;
 		$waypoint->position->ele = ($wpt->ele && !$this->suppresswptele)? (string) $wpt->ele : null;
 		$waypoint->position->geoidheight = ($wpt->geoidheight)? (string) $wpt->geoidheight : null;
-
+                $waypoint->position->elechange = null;
+		
+		if (!$this->suppresswptele && $this->lastrteele){
+                    $waypoint->position->elechange = $waypoint->position->ele - $this->lastrteele;
+                    $this->rteeledev[] = $waypoint->position->elechange;
+		}
+		
+		if ($waypoint->position->ele){
+                    $this->lastrteele = $waypoint->position->ele;
+		}
+		
+		
+		
 		// Add meta information about the waypoint
 		$waypoint->meta = new \stdClass();
 		$waypoint->meta->time = ($wpt->time)? strtotime($wpt->time) : null;
