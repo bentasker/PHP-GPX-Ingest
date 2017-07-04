@@ -836,7 +836,7 @@ class GPXIngest{
 		if ($this->suppresswptlocation){
 			$this->journey->metadata->suppression[] = 'wptlocation';
 		}
-		if ($this->$this->suppresswptele){
+		if ($this->suppresswptele){
 			$this->journey->metadata->suppression[] = 'wptele';		
 		}
 
