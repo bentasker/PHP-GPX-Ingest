@@ -431,8 +431,11 @@ class GPXIngest{
 
 					if (!$this->suppresselevation){
 						$ele = (string) $trkpt->ele;
+						// This is going to be deprecated (GPXIN-34)
 						$this->journey->journeys->$jkey->segments->$segkey->points->$key->elevation = $ele;
-                                               
+						
+						
+                                                $this->journey->journeys->$jkey->segments->$segkey->points->$key->ele = $ele; 
                                                 
 						$change = 0;
 						if ($lastele){
