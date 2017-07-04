@@ -1554,6 +1554,14 @@ class GPXIngest{
 			case 'date':
 				$this->suppressdate = false;
 			break;
+				
+                        case 'wptlocation':
+                        	$this->suppresswptlocation = false;
+                                break;
+                        	
+                        case 'wptele':
+                                $this->suppresssuppresswptele = false;
+                                break;
 
 		}
 	}
