@@ -206,17 +206,21 @@ class GPXIngest{
                     $this->journey->stats->$k = 0;
                 }
                 
+                // Bounds introduced in GPXIN-26
+                $bounds = new \stdClass();
+                $bounds->Lat = new \stdClass();
+                $bounds->Lat->min = 0;
+                $bounds->Lat->max = 0;
+                $bounds->Lon = new \stdClass();
+                $bounds->Lon->min = 0;
+                $bounds->Lon->max = 0;
+                               
+		$this->journey->stats->bounds = $bounds;
+		
+		// GPXIN-33 Create route related stats object
+                $this->journey->stats->routestats = new \stdClass();
+                $this->journey->stats->routestats = $bounds;
                 
-		// Bounds introduced in GPXIN-26
-		$this->journey->stats->bounds = new \stdClass();
-		$this->journey->stats->bounds->Lat = new \stdClass();
-		$this->journey->stats->bounds->Lat->min = 0;
-		$this->journey->stats->bounds->Lat->max = 0;
-		$this->journey->stats->bounds->Lon = new \stdClass();
-		$this->journey->stats->bounds->Lon->min = 0;
-		$this->journey->stats->bounds->Lon->max = 0;
-
-
 
 		// Initialise the stats array
 		$this->totaltimes = array();
