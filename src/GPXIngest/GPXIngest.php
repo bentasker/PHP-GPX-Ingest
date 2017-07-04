@@ -1541,19 +1541,19 @@ class GPXIngest{
 		switch($ele){
 			case 'location':
 				$this->suppresslocation = false;
-			break;
+                                break;
 
 			case 'speed':
 				$this->suppressspeed = false;
-			break;
+                                break;
 
 			case 'elevation':
 				$this->suppresselevation = false;
-			break;
+                                break;
 
 			case 'date':
 				$this->suppressdate = false;
-			break;
+                                break;
 				
                         case 'wptlocation':
                         	$this->suppresswptlocation = false;
