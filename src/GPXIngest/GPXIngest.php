@@ -432,7 +432,8 @@ class GPXIngest{
 					if (!$this->suppresselevation){
 						$ele = (string) $trkpt->ele;
 						$this->journey->journeys->$jkey->segments->$segkey->points->$key->elevation = $ele;
-
+                                               
+                                                
 						$change = 0;
 						if ($lastele){
 							$change = $ele - $lastele;
@@ -639,10 +640,10 @@ class GPXIngest{
 
 		}
 		if (!$this->suppresselevation){
-			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation = new \stdClass();
-			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->max = max($this->jeles);
-			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->min = min($this->jeles);
-			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->avgChange = round(array_sum($this->jeledevs)/count($this->jeledevs),2);
+			$this->journey->stats->elevation = new \stdClass();
+			$this->journey->stats->elevation->max = max($this->jeles);
+			$this->journey->stats->elevation->min = min($this->jeles);
+			$this->journey->stats->elevation->avgChange = round(array_sum($this->jeledevs)/count($this->jeledevs),2);
 		}
 
 		if (!$this->suppresslocation){
