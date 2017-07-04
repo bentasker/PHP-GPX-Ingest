@@ -17,6 +17,8 @@ The class has the following features
  - Generate stats for each track, and maintain global stats
  - 'SmartTrack' functionality - if an excessive delay is detected between trackpoints a new track will be started (can be disabled/threshold adjusted)
  - Ability to suppress data - Can prevent speed, location, dates and/or elevation from being included in the resulting Journey object.
+ - Auto calculation of distance travelled based on lat/lon changes. See [GPXIN-6](http://projects.bentasker.co.uk/jira_projects/browse/GPXIN-6.html)
+ - Auto calculation of speed based on distance travelled, if speed not defined within the GPX file. See [GPXIN-13](http://projects.bentasker.co.uk/jira_projects/browse/GPXIN-13.html)
 
 
 
