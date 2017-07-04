@@ -422,9 +422,9 @@ class GPXIngest{
 						// Calculate time moving/stationary etc
 						if ($this->lastspeed){
 
-							if ($ptspeed > 0){
+							if ($ptspeed > 0 || $this->lastspeed != 0){
 								$timemoving = $timemoving + $this->entryperiod;
-							}else{
+							}elseif ($this->lastspeed == 0){
 								$timestationary = $timestationary + $this->entryperiod;
 							}
 
