@@ -195,23 +195,18 @@ class GPXIngest{
 		// Initialise the object
 		$this->journey->created = new \stdClass();
 		$this->journey->stats = new \stdClass();
-		$this->journey->stats->trackpoints = 0;
-		$this->journey->stats->recordedDuration = 0;
-		$this->journey->stats->segments = 0;
-		$this->journey->stats->tracks = 0;
-		$this->journey->stats->maxacceleration = 0;
-		$this->journey->stats->maxdeceleration = 0;
-		$this->journey->stats->minacceleration = 0;
-		$this->journey->stats->mindeceleration = 0;
-		$this->journey->stats->avgacceleration = 0;
-		$this->journey->stats->avgdeceleration = 0;
-		$this->journey->stats->speedUoM = array();
-		$this->journey->stats->timeMoving = 0;
-		$this->journey->stats->timeStationary = 0;
-		$this->journey->stats->timeAccelerating = 0;
-		$this->journey->stats->timeDecelerating = 0;
-		$this->journey->stats->distanceTravelled = 0;
-
+                $this->journey->stats->speedUoM = array();
+                
+                $zeroed_stats = array ('trackpoints','recordedDuration','segments','tracks',
+                                        'maxacceleration','maxdeceleration','mindeceleration',
+                                        'avgacceleration','avgdeceleration','timeMoving','timeStationary',
+                                        'timeAccelerating','timeDecelerating','distanceTravelled');
+                
+                foreach ($zeroed_stats as $k){
+                    $this->journey->stats->$k = 0;
+                }
+                
+                
 		// Bounds introduced in GPXIN-26
 		$this->journey->stats->bounds = new \stdClass();
 		$this->journey->stats->bounds->Lat = new \stdClass();
