@@ -666,6 +666,10 @@ class GPXIngest{
 			$this->journey->stats->elevation->max = max($this->jeles);
 			$this->journey->stats->elevation->min = min($this->jeles);
 			$this->journey->stats->elevation->avgChange = round(array_sum($this->jeledevs)/count($this->jeledevs),2);
+			$this->journey->stats->elevation->maxChange = max($this->jeledevs);
+                        $this->journey->stats->elevation->minChange = min($this->jeledevs);
+			
+			
 		}
 
 		if (!$this->suppresslocation){
@@ -987,6 +991,8 @@ class GPXIngest{
 			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->max = max($this->seles);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->min = min($this->seles);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->avgChange = round(array_sum($this->seledevs)/count($this->seledevs),2);
+			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->maxChange = max($this->seledevs);
+			$this->journey->journeys->$jkey->segments->$segkey->stats->elevation->minChange = min($this->seledevs);
 		}
 
 		// Update the stationary/moving stats
@@ -1084,6 +1090,8 @@ class GPXIngest{
 			$this->journey->journeys->$jkey->stats->elevation->max = max($this->feles);
 			$this->journey->journeys->$jkey->stats->elevation->min = min($this->feles);
 			$this->journey->journeys->$jkey->stats->elevation->avgChange = round(array_sum($this->feledevs)/count($this->feledevs),2);
+			$this->journey->journeys->$jkey->stats->elevation->maxChange = max($this->feledevs);
+			$this->journey->journeys->$jkey->stats->elevation->minChange = min($this->feledevs);
 			$this->journey->journeys->$jkey->stats->elevation->gain = $this->calculateElevationGain($this->feles);
 		}
 
