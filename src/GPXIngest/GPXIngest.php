@@ -32,6 +32,8 @@ class GPXIngest{
 	private $suppressspeed = false;
 	private $suppresselevation = false;
 	private $suppressdate = false;
+	private $suppresswptlocation = false;
+	private $suppresswptele = false;	
 	private $lastspeed = false;
 	private $lastspeedm = false;
 	private $journeylats;
@@ -575,7 +577,7 @@ class GPXIngest{
 		}
 
 		
-		if (isset($rtelats) && count($rtelats) > 0){
+		if (!$this->suppresswptlocation && isset($rtelats) && count($rtelats) > 0){
                         $this->journey->stats->routestats->bounds->Lat->min = min($rtelats);
                         $this->journey->stats->routestats->bounds->Lat->max = max($rtelats);
                         $this->journey->stats->routestats->bounds->Lon->min = min($rtelons);
@@ -694,8 +696,8 @@ class GPXIngest{
 
 		// Add the positioning information
 		$waypoint->position = new \stdClass();
-		$waypoint->position->lat = ($wpt['lat'])? (string) $wpt['lat'] : null;
-		$waypoint->position->lon = ($wpt['lon'])? (string) $wpt['lon'] : null;
+		$waypoint->position->lat = ($wpt['lat'] && !$this->suppresswptlocation)? (string) $wpt['lat'] : null;
+		$waypoint->position->lon = ($wpt['lon'] && !$this->suppresswptlocation)? (string) $wpt['lon'] : null;
 		$waypoint->position->ele = ($wpt->ele)? (string) $wpt->ele : null;
 		$waypoint->position->geoidheight = ($wpt->geoidheight)? (string) $wpt->geoidheight : null;
 
@@ -816,6 +818,9 @@ class GPXIngest{
 		}
 		if ($this->suppressdate){
 			$this->journey->metadata->suppression[] = 'dates';
+		}
+		if ($this->suppresswptlocation){
+			$this->journey->metadata->suppression[] = 'wptlocation';
 		}
 
 	}
@@ -1496,6 +1501,9 @@ class GPXIngest{
 
 			case 'date':
 				$this->suppressdate = true;
+				
+                        case 'wptlocation':
+                        	$this->suppresswptlocation = true;
 			break;
 
 		}
