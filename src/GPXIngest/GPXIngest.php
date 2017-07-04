@@ -207,21 +207,27 @@ class GPXIngest{
                 }
                 
                 // Bounds introduced in GPXIN-26
-                $bounds = new \stdClass();
-                $bounds->Lat = new \stdClass();
-                $bounds->Lat->min = 0;
-                $bounds->Lat->max = 0;
-                $bounds->Lon = new \stdClass();
-                $bounds->Lon->min = 0;
-                $bounds->Lon->max = 0;
-                               
-		$this->journey->stats->bounds = $bounds;
-		
-		// GPXIN-33 Create route related stats object
-                $this->journey->stats->routestats = new \stdClass();
-                $this->journey->stats->routestats = $bounds;
+                $this->journey->stats->bounds = new \stdClass();
+                $this->journey->stats->bounds->Lat = new \stdClass();
+                $this->journey->stats->bounds->Lat->min = 0;
+                $this->journey->stats->bounds->Lat->max = 0;
+                $this->journey->stats->bounds->Lon = new \stdClass();
+                $this->journey->stats->bounds->Lon->min = 0;
+                $this->journey->stats->bounds->Lon->max = 0;
                 
-
+                
+                // GPXIN-33 Create route related stats object
+                $this->journey->stats->routestats = new \stdClass();
+                $this->journey->stats->routestats->bounds = new \stdClass();
+                $this->journey->stats->routestats->bounds->Lat = new \stdClass();
+                $this->journey->stats->routestats->bounds->Lat->min = 0;
+                $this->journey->stats->routestats->bounds->Lat->max = 0;
+                $this->journey->stats->routestats->bounds->Lon = new \stdClass();
+                $this->journey->stats->routestats->bounds->Lon->min = 0;
+                $this->journey->stats->routestats->bounds->Lon->max = 0;
+                
+                
+                
 		// Initialise the stats array
 		$this->totaltimes = array();
 		$this->highspeeds = array();
@@ -546,6 +552,9 @@ class GPXIngest{
 
 
 		// Route support - added in GPXIN-27
+		
+		$rtelats = array();
+		$rtelons = array();
 		foreach ($this->xml->rte as $rte){
 			// Increment the counter
 			$rkey = "route".$this->journey->metadata->routes;
@@ -566,10 +575,26 @@ class GPXIngest{
 			foreach ($rte->rtept as $rtpt){
 				$ptkey="rtpoint".$key;
 				$this->journey->related->routes->$rkey->points->$ptkey = $this->buildWptType($rtpt);
+				
+				if ($this->journey->related->routes->$rkey->points->$ptkey->position->lat){
+                                    $rtelats[] = $this->journey->related->routes->$rkey->points->$ptkey->position->lat;
+                                    $rtelons[] = $this->journey->related->routes->$rkey->points->$ptkey->position->lon;
+				}
+				
 				$key++;
 			}
 		}
 
+		
+		if (isset($rtelats) && count($rtelats) > 0){
+                        $this->journey->stats->routestats->bounds->Lat->min = min($rtelats);
+                        $this->journey->stats->routestats->bounds->Lat->max = max($rtelats);
+                        $this->journey->stats->routestats->bounds->Lon->min = min($rtelons);
+                        $this->journey->stats->routestats->bounds->Lon->max = max($rtelons);
+		}
+		
+		
+		
 		// Add any relevant metadata
 		$this->journey->metadata->smartTrackStatus = ($this->smartTrackStatus())? 'enabled' : 'disabled';
 		$this->journey->metadata->smartTrackThreshold = $this->smartTrackThreshold();
