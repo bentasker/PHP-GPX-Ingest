@@ -28,6 +28,7 @@ class GPXIngest{
 	private $trackduration;
 	private $smarttrack=true;
 	private $smarttrackthreshold = 3600;
+	private $suppresscalcdistance = false;
 	private $suppresslocation = false;
 	private $suppressspeed = false;
 	private $suppresselevation = false;
@@ -46,7 +47,7 @@ class GPXIngest{
 	private $tracklons;
 	private $ingest_version = 1.02;
 	private $entryperiod = 0;
-	private $experimentalFeatures = array('calcDistance', 'calcElevationGain'); // See GPXIN-17
+	private $experimentalFeatures = array('calcElevationGain'); // See GPXIN-17
 	private $featuretoggle = array();
 	private $waypoints;
 
@@ -300,7 +301,7 @@ class GPXIngest{
 
 					// If speed is not available (and we're not calculating anything which can be used) suppress speed
 					// Will need updating in GPXIN-20
-					if (!$trkpt->desc && !$this->expisenabled('calcDistance')){
+					if (!$trkpt->desc && $this->$suppresscalcdistance){
 					  $this->suppress('speed'); // Prevent warnings if speed is not available - See GPXIN-16
 					}
 
@@ -399,7 +400,7 @@ class GPXIngest{
 						      $this->journey->metadata->AutoCalc['speed'] = true;
 						}
 
-
+                                                $this->journey->journeys->$jkey->segments->$segkey->points->$key->distanceTravelled = $dist;
 						$this->lastpos = array($lat,$lon); // update the reference array
 
 						// Update the stats arrays
@@ -1110,12 +1111,6 @@ class GPXIngest{
 	* @return distance travelled (feet)
 	*/
 	protected function calculateTravelledDistance($old,$new){
-
-
-	  if (!$this->expisenabled('calcDistance')){ // This functionality is currently considered experimental
-		  return 0;
-	  }
-
 	  // Array mapping (for ease of reference)
           // lat1 - old[0]
           // lat2 - new[0]
@@ -1562,6 +1557,11 @@ class GPXIngest{
                                 $this->suppresssuppresswptele = true;
                                 break;
 
+                        case 'calcdistance':
+                                $this->suppresscalcdistance = true;
+                                break;
+                                
+
 		}
 	}
 
@@ -1596,6 +1596,10 @@ class GPXIngest{
                         case 'wptele':
                                 $this->suppresssuppresswptele = false;
                                 break;
+                                
+                        case 'calcdistance':
+                                $this->suppresscalcdistance = false;
+                                break;                                
 
 		}
 	}
