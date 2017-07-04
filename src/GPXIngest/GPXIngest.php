@@ -45,7 +45,7 @@ class GPXIngest{
 	private $segmentlons;
 	private $tracklats;
 	private $tracklons;
-	private $ingest_version = 1.02;
+	private $ingest_version = 1.03;
 	private $entryperiod = 0;
 	private $experimentalFeatures = array('calcElevationGain'); // See GPXIN-17
 	private $featuretoggle = array();
