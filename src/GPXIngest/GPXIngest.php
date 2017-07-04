@@ -712,7 +712,7 @@ class GPXIngest{
 		$waypoint->position = new \stdClass();
 		$waypoint->position->lat = ($wpt['lat'] && !$this->suppresswptlocation)? (string) $wpt['lat'] : null;
 		$waypoint->position->lon = ($wpt['lon'] && !$this->suppresswptlocation)? (string) $wpt['lon'] : null;
-		$waypoint->position->ele = ($wpt->ele)? (string) $wpt->ele : null;
+		$waypoint->position->ele = ($wpt->ele && !$this->suppresswptele)? (string) $wpt->ele : null;
 		$waypoint->position->geoidheight = ($wpt->geoidheight)? (string) $wpt->geoidheight : null;
 
 		// Add meta information about the waypoint
@@ -835,6 +835,9 @@ class GPXIngest{
 		}
 		if ($this->suppresswptlocation){
 			$this->journey->metadata->suppression[] = 'wptlocation';
+		}
+		if ($this->$this->suppresswptele){
+			$this->journey->metadata->suppression[] = 'wptele';		
 		}
 
 	}
@@ -1503,22 +1506,27 @@ class GPXIngest{
 		switch($ele){
 			case 'location':
 				$this->suppresslocation = true;
-			break;
+                                break;
 
 			case 'speed':
 				$this->suppressspeed = true;
-			break;
+                                break;
 
 			case 'elevation':
 				$this->suppresselevation = true;
-			break;
+                                break;
 
 			case 'date':
 				$this->suppressdate = true;
+				break;
 				
                         case 'wptlocation':
                         	$this->suppresswptlocation = true;
-			break;
+                                break;
+                        	
+                        case 'wptele':
+                                $this->suppresssuppresswptele = true;
+                                break;
 
 		}
 	}
