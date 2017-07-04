@@ -1202,7 +1202,20 @@ class GPXIngest{
 
 		return $tracks;
 	}
+	
+	
+	/** Get ID's of any ingested routes
+	*
+	* @return array
+	*
+	*/
+	public function getRouteIDs(){
+		if (!isset($this->journey->related->routes)){
+			return array();
+		}
 
+		return array_keys((array) $this->journey->related->routes);		
+	}
 
 	/** Get ID's and names of any ingested routes
 	*
@@ -1223,8 +1236,18 @@ class GPXIngest{
 		return $routes;
 	}
 
+	
+	
+	/** Driver method to keep b/c but also to make more consistent with naming of track related methods
+	*
+	* @return mixed
+	*/
+	public function getRoute($id){
+            return $this->getRouteByID($id);
+	}
+	
 
-	/** Get a route based on it's ID
+	/** Get a route based on it's ID - DEPRECATED
 	*
 	* @return mixed
 	*
@@ -1247,7 +1270,17 @@ class GPXIngest{
 	}
 
 
+	/** Get the routepoint ID's
+	*
+	* @arg track - the Track ID
+	* @arg segment - the segment ID
+	*
+	*/
+	public function getRoutePointNames($route){
+		return array_keys((array) $this->journey->related->routes->$route->points);
+	}
 
+	
 
 	/** Get details of segments for a given track
 	*
