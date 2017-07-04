@@ -412,7 +412,6 @@ class GPXIngest{
 						$this->segmentlons[] = $lon;
 						$this->tracklats[] = $lat;
 						$this->tracklons[] = $lon;
-
 					}
 
 
