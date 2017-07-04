@@ -589,9 +589,10 @@ class GPXIngest{
                         $this->journey->stats->routestats->bounds->Lon->max = max($rtelons);
 		}
 		
-		if (!$this->suppresswptele && isset($rteeles) && count($rteeles) > 0){
-                        $this->journey->stats->routestats->bounds->Ele->min = min($rteeles);
-                        $this->journey->stats->routestats->bounds->Ele->max = max($rteeles);
+		if (!$this->suppresswptele && isset($rteeles) && count($rteeles) > 0){                       
+                        $this->journey->stats->routestats->elevation = new \stdClass();
+                        $this->journey->stats->routestats->elevation->min = min($rteeles);
+                        $this->journey->stats->routestats->elevation->max = max($rteeles);
 		}		
 		
 		
@@ -683,11 +684,7 @@ class GPXIngest{
                 $bounds->Lat->max = 0;
                 $bounds->Lon = new \stdClass();
                 $bounds->Lon->min = 0;
-                $bounds->Lon->max = 0;      
-                $bounds->Ele = new \stdClass();
-                $bounds->Ele->min = 0;
-                $bounds->Ele->max = 0;
-                
+                $bounds->Lon->max = 0;
                 return $bounds;
 	}
 	
