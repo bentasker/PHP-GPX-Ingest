@@ -207,26 +207,11 @@ class GPXIngest{
                 }
                 
                 // Bounds introduced in GPXIN-26
-                $this->journey->stats->bounds = new \stdClass();
-                $this->journey->stats->bounds->Lat = new \stdClass();
-                $this->journey->stats->bounds->Lat->min = 0;
-                $this->journey->stats->bounds->Lat->max = 0;
-                $this->journey->stats->bounds->Lon = new \stdClass();
-                $this->journey->stats->bounds->Lon->min = 0;
-                $this->journey->stats->bounds->Lon->max = 0;
-                
+                $this->journey->stats->bounds = $this->buildBoundsObj();
                 
                 // GPXIN-33 Create route related stats object
                 $this->journey->stats->routestats = new \stdClass();
-                $this->journey->stats->routestats->bounds = new \stdClass();
-                $this->journey->stats->routestats->bounds->Lat = new \stdClass();
-                $this->journey->stats->routestats->bounds->Lat->min = 0;
-                $this->journey->stats->routestats->bounds->Lat->max = 0;
-                $this->journey->stats->routestats->bounds->Lon = new \stdClass();
-                $this->journey->stats->routestats->bounds->Lon->min = 0;
-                $this->journey->stats->routestats->bounds->Lon->max = 0;
-                
-                
+                $this->journey->stats->routestats->bounds = $this->buildBoundsObj();                
                 
 		// Initialise the stats array
 		$this->totaltimes = array();
@@ -672,7 +657,20 @@ class GPXIngest{
 	}
 	
 	
-	
+	/** Builds an object structure to be used to store the outer bounds for longitude and latitude
+	*
+	* @return stdclass
+	*/
+	private function buildBoundsObj(){
+                $bounds = new \stdClass();
+                $bounds->Lat = new \stdClass();
+                $bounds->Lat->min = 0;
+                $bounds->Lat->max = 0;
+                $bounds->Lon = new \stdClass();
+                $bounds->Lon->min = 0;
+                $bounds->Lon->max = 0;
+                return $bounds;
+	}
 	
 	
 	/** Builds a stdClass based around the GPX spec's wptType
@@ -881,13 +879,7 @@ class GPXIngest{
 		$this->journey->journeys->$jkey->stats->timeDecelerating = 0;
 		$this->journey->journeys->$jkey->stats->distanceTravelled = 0;
 
-                $this->journey->journeys->$jkey->stats->bounds = new \stdClass();
-                $this->journey->journeys->$jkey->stats->bounds->Lat = new \stdClass();
-                $this->journey->journeys->$jkey->stats->bounds->Lat->min = 0;
-                $this->journey->journeys->$jkey->stats->bounds->Lat->max = 0;
-                $this->journey->journeys->$jkey->stats->bounds->Lon = new \stdClass();
-                $this->journey->journeys->$jkey->stats->bounds->Lon->min = 0;
-                $this->journey->journeys->$jkey->stats->bounds->Lon->max = 0;
+                $this->journey->journeys->$jkey->stats->bounds = $this->buildBoundsObj();
 
 		$this->tracks[$jkey]['name'] = $this->journey->journeys->$jkey->name;
 		$this->tracks[$jkey]['segments'] = array();
@@ -924,9 +916,7 @@ class GPXIngest{
 		// Calculate the total distance travelled (feet)
 		if (!$this->suppresslocation){
 			$this->journey->journeys->$jkey->segments->$segkey->stats->distanceTravelled = array_sum($this->sdist);
-                        $this->journey->journeys->$jkey->segments->$segkey->stats->bounds = new \stdClass(); //GPXIN-26
-                        $this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lat = new \stdClass();
-                        $this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lon = new \stdClass();
+                        $this->journey->journeys->$jkey->segments->$segkey->stats->bounds = $this->buildBoundsObj(); //GPXIN-26
 			$this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lat->min = min($this->segmentlats);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lat->max = max($this->segmentlats);
 			$this->journey->journeys->$jkey->segments->$segkey->stats->bounds->Lon->min = min($this->segmentlons);
@@ -1028,9 +1018,7 @@ class GPXIngest{
 		if (!$this->suppresslocation){
 			$this->journey->journeys->$jkey->stats->distanceTravelled = array_sum($this->fdist);
 
-                        $this->journey->journeys->$jkey->stats->bounds = new \stdClass(); //GPXIN-26
-                        $this->journey->journeys->$jkey->stats->bounds->Lat = new \stdClass();
-                        $this->journey->journeys->$jkey->stats->bounds->Lon = new \stdClass();
+                        $this->journey->journeys->$jkey->stats->bounds = $this->buildBoundsObj(); //GPXIN-26
 			$this->journey->journeys->$jkey->stats->bounds->Lat->min = min($this->tracklats);
 			$this->journey->journeys->$jkey->stats->bounds->Lat->max = max($this->tracklats);
 			$this->journey->journeys->$jkey->stats->bounds->Lon->min = min($this->tracklons);
