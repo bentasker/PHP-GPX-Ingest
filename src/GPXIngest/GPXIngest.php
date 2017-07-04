@@ -1237,6 +1237,15 @@ class GPXIngest{
 	}
 
 	
+	/** Return a copy of the routes object
+	*
+	* @return stdclass
+	*
+	*/
+	public function getRoutesObject(){
+                return $this->journey->related->routes;
+	}
+	
 	
 	/** Driver method to keep b/c but also to make more consistent with naming of track related methods
 	*
@@ -1260,6 +1269,17 @@ class GPXIngest{
 		return false;
 	}
 
+
+	/** Retrieve a routepoint object
+	*
+	* @arg route - the route ID
+	* @arg routepoint - the routepoint ID
+	*
+	*/
+	public function getRoutePoint($route,$routepoint){
+		return $this->journey->related->routes->$route->points->$routepoint;
+	}
+	
 
 	/** Get Route statistics
 	*
