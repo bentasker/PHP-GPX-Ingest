@@ -1243,6 +1243,17 @@ class GPXIngest{
 	}
 
 
+	/** Get Route statistics
+	*
+	* @return object
+	*/
+	public function getRouteStats(){
+		return $this->journey->stats->routestats;
+	}
+
+
+
+
 	/** Get details of segments for a given track
 	*
 	* @arg track - the track ID
