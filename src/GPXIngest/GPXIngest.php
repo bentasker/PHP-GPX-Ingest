@@ -301,7 +301,7 @@ class GPXIngest{
 
 					// If speed is not available (and we're not calculating anything which can be used) suppress speed
 					// Will need updating in GPXIN-20
-					if (!$trkpt->desc && $this->$suppresscalcdistance){
+					if (!$trkpt->desc && $this->suppresscalcdistance){
 					  $this->suppress('speed'); // Prevent warnings if speed is not available - See GPXIN-16
 					}
 
